@@ -145,13 +145,14 @@ panel de acciones. Sus conclusiones son especialmente relevantes para este
 trabajo: los métodos no lineales pueden capturar interacciones que los lineales
 ignoran, pero las ganancias predictivas son modestas (con $R^2$ fuera de muestra
 muy pequeños), y la regularización resulta decisiva para evitar el sobreajuste
-en un entorno de baja señal-ruido. Entre los métodos concretos, los
-\textit{Random Forests} de \citet{Breiman2001} ofrecen un modelo no lineal
-robusto basado en el promediado de árboles, mientras que las regresiones
-regularizadas ---el \textit{Lasso}, el \textit{Ridge} y su combinación, la
-\textit{elastic net} de \citet{Zou2005}--- proporcionan modelos parsimoniosos
-con selección automática de variables. Todos ellos se emplean en este trabajo
-para predecir la rentabilidad esperada que alimenta el optimizador.
+en un entorno de baja señal-ruido. Entre los métodos concretos, este trabajo
+emplea los \textit{Random Forests} de \citet{Breiman2001} ---un modelo no
+lineal robusto basado en el promediado de árboles--- y dos regresiones
+regularizadas: el \textit{Ridge} y el \textit{Lasso}. Este último, emparentado
+con la \textit{elastic net} de \citet{Zou2005}, realiza además selección
+automática de variables, lo que resulta especialmente útil en entornos de baja
+señal-ruido. Estas predicciones de la rentabilidad esperada son las que
+alimentan el optimizador.
 
 Conviene subrayar que la incorporación de estas predicciones al modelo de
 Markowitz preserva su naturaleza de problema de optimización convexa, que puede
@@ -181,9 +182,9 @@ A la luz de la literatura revisada, este trabajo se sitúa en la intersección d
 tres líneas: la formulación matemática rigurosa del problema de Markowitz como
 programa cuadrático convexo resuelto de forma exacta \cite{Markowitz1952,
 Boyd2004}; la mitigación del error de estimación tanto en la covarianza
----mediante \textit{shrinkage} y modelos de factores \cite{Ledoit2004,
-FamaFrench1993}--- como en la rentabilidad esperada ---mediante aprendizaje
-automático \cite{Gu2020}---; y la evaluación honesta del rendimiento fuera de
+---mediante \textit{shrinkage} y un modelo de factores por componentes
+principales \cite{Ledoit2004, Ross1976}--- como en la rentabilidad esperada
+---mediante aprendizaje automático \cite{Gu2020}---; y la evaluación honesta del rendimiento fuera de
 muestra con contraste de significancia estadística \cite{DeMiguel2009,
 Memmel2003}.
 
@@ -199,7 +200,3 @@ contraste de significancia estadística y discute con transparencia las
 condiciones bajo las cuales la optimización ayuda ---y aquellas, más frecuentes,
 en las que el error de estimación impide distinguirla de una diversificación
 ingenua.
-
-% NOTA PARA RICARDO: si el director confirma que debes citar y diferenciar el
-% TFG previo de la universidad con tema similar, añade aquí su referencia real
-% (autor, título, año) y un párrafo señalando en qué se diferencia este trabajo.
