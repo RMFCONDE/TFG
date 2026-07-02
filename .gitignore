@@ -1,0 +1,17 @@
+# Datos generados (derivables con los scripts)
+data/processed/
+data/outputs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Sistema
+.DS_Store
