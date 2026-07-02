@@ -19,7 +19,7 @@ y sus rentabilidades futuras.
 La estimación tradicional de $\boldsymbol{\mu}$ como media histórica asume
 implícitamente que las rentabilidades son independientes e idénticamente
 distribuidas (i.i.d.). Si esta hipótesis fuera cierta, la media muestral sería
-el estimador óptimo (insesgado y de mínima varianza). Sin embargo, existe
+el mejor estimador lineal insesgado de $\mu_i$. Sin embargo, existe
 abundante evidencia empírica de que las rentabilidades no son i.i.d.:
 presentan \textbf{autocorrelación} a corto plazo (momentum, reversión a la
 media), dependencia de la \textbf{volatilidad} (clustering) y sensibilidad a
@@ -38,11 +38,12 @@ produciendo una estimación de $\mu_{i,t+1} = \E[r_{i,t+1} \mid
 
 La clave está en que el modelo aprende de \textbf{todos los activos}
 simultáneamente (o al menos comparte estructura entre ellos), lo que mitiga
-la maldición de la dimensionalidad temporal: en lugar de estimar una media
+la escasez de datos por activo: en lugar de estimar una media
 por activo con 36 observaciones, el modelo estima una función $f$ con
 $30 \times 36 = 1080$ observaciones, reduciendo la varianza del estimador.
 
 \subsection{Configuración del problema}
+\label{subsec:config-ml}
 
 Para cada activo $i \in \{1, \dots, n\}$ y cada mes $t$, definimos:
 
@@ -140,11 +141,13 @@ norma $\ell_2$ de los coeficientes:
 \begin{equation}
     \hat{\boldsymbol{\beta}}_{\text{Ridge}} =
     \arg\min_{\boldsymbol{\beta}} \left\{
-    \sum_{t=1}^{T} (y_t - \mathbf{x}_t^T \boldsymbol{\beta})^2
+    \sum_{i,t} (y_{i,t} - \mathbf{x}_{i,t}^T \boldsymbol{\beta})^2
     + \alpha \sum_{j=1}^{p} \beta_j^2
-    \right\}.
+    \right\},
     \label{eq:ridge}
 \end{equation}
+donde la primera suma recorre las observaciones apiladas de todos los activos
+(la muestra agrupada de la Sección~\ref{subsec:config-ml}).
 
 La penalización $\ell_2$ contrae los coeficientes hacia cero sin anularlos:
 reduce la varianza del estimador a cambio de un pequeño sesgo, y es adecuada
@@ -152,8 +155,8 @@ cuando muchas features tienen poder predictivo débil pero no nulo o están muy
 correlacionadas entre sí. En ese caso, una regresión sin penalizar daría
 coeficientes muy grandes e inestables (la matriz $\mathbf{X}^T\mathbf{X}$ queda
 mal condicionada, casi singular); la penalización de Ridge los estabiliza. El
-hiperparámetro $\alpha$ ---de $0$ (MCO) a $\infty$ (todos los coeficientes
-nulos)--- se selecciona por validación cruzada temporal
+hiperparámetro $\alpha$ ---de $0$ (mínimos cuadrados ordinarios) a $\infty$
+(todos los coeficientes nulos)--- se selecciona por validación cruzada temporal
 (\textit{TimeSeriesSplit}) en 10 valores entre $10^{-3}$ y $10^{2}$. Como el
 entrenamiento es agrupado sobre activos de escalas heterogéneas, las features se
 estandarizan (media 0, varianza 1) usando solo la muestra de entrenamiento.
@@ -164,7 +167,7 @@ Lasso \cite{Tibshirani1996} sustituye la penalización $\ell_2$ por $\ell_1$:
 \begin{equation}
     \hat{\boldsymbol{\beta}}_{\text{Lasso}} =
     \arg\min_{\boldsymbol{\beta}} \left\{
-    \sum_{t=1}^{T} (y_t - \mathbf{x}_t^T \boldsymbol{\beta})^2
+    \sum_{i,t} (y_{i,t} - \mathbf{x}_{i,t}^T \boldsymbol{\beta})^2
     + \alpha \sum_{j=1}^{p} |\beta_j|
     \right\}.
     \label{eq:lasso}
@@ -218,8 +221,8 @@ meses), predice $\hat{\mu}_{i,t+1}$ para cada activo a partir de sus features de
 $t$, y esas predicciones ---junto con $\hat{\boldsymbol{\Sigma}}$--- alimentan la
 optimización de la cartera de máximo Sharpe, cuya rentabilidad se evalúa en
 $t+1$. El ciclo se repite 143 veces (enero 2013 -- diciembre 2024). El
-Capítulo~\ref{ch:metodologia} detalla el protocolo completo y las salvaguardas
-contra el look-ahead.
+Capítulo~\ref{ch:metodologia} detalla el protocolo completo y las medidas que
+se toman para evitar el look-ahead.
 
 \subsection{Métricas de evaluación predictiva}
 
@@ -240,7 +243,7 @@ las siguientes métricas sobre las predicciones out-of-sample de cada modelo:
           $\mathbf{r}_{t+1}$ realizada, agregada a nivel de mes.
 \end{itemize}
 
-Es importante señalar que, en finanzas, incluso un $R^2$ pequeño
+En finanzas, incluso un $R^2$ pequeño
 ($\approx 0{,}01$--$0{,}05$) puede ser económicamente significativo si se
 traduce en una mejora del ratio de Sharpe de la cartera optimizada.
 
@@ -248,7 +251,7 @@ traduce en una mejora del ratio de Sharpe de la cartera optimizada.
 \section{Conexión con la optimización de carteras}
 %--------------------------------------------------------------------
 
-Conviene subrayar que el objetivo no es minimizar el RMSE de
+El objetivo no es minimizar el RMSE de
 $\hat{\boldsymbol{\mu}}$, sino maximizar el rendimiento out-of-sample de la
 cartera: un RMSE bajo no garantiza una buena cartera, y el QP puede
 beneficiarse más de acertar el \textit{orden} (ranking) de los activos que de
