@@ -1,0 +1,120 @@
+\chapter{Conclusiones y líneas futuras}
+\label{ch:conclusiones}
+
+%--------------------------------------------------------------------
+\section{Conclusiones}
+%--------------------------------------------------------------------
+
+Este trabajo ha abordado el problema de la optimización de carteras según
+el modelo de Markowitz, prestando especial atención a la estimación de sus
+dos parámetros fundamentales: la matriz de covarianza $\boldsymbol{\Sigma}$
+y el vector de rentabilidades esperadas $\boldsymbol{\mu}$. A continuación
+se sintetizan las principales conclusiones.
+
+\subsection{Sobre la formulación matemática}
+
+El modelo de Markowitz es un programa cuadrático convexo (QP) de solución exacta
+cuyas condiciones KKT admiten una lectura económica clara: en el óptimo, el
+riesgo adicional que aporta cada activo es proporcional a su rentabilidad
+esperada. La excepción son los activos que chocan con una de las cotas de peso
+(quedarse en el $0$ o en el tope del $20\%$); para ellos, el precio sombra de
+esa cota mide cuánto bajaría el riesgo de la cartera si la cota pudiera
+relajarse. Sin restricciones de desigualdad, la frontera eficiente es una hipérbola
+en el plano $(\sigma_p, \mu_p)$ cuyos parámetros dependen de tres escalares
+($A$, $B$, $C$) que condensan la información de $\boldsymbol{\mu}$ y
+$\boldsymbol{\Sigma}$.
+
+\subsection{Sobre la estimación de la covarianza}
+
+La matriz de covarianza muestral, aunque insesgada, produce
+carteras excesivamente concentradas e inestables cuando el número de activos
+es comparable al de observaciones ($n/T \approx 0{,}83$ en nuestro caso).
+Se han evaluado dos alternativas. El \textbf{shrinkage de Ledoit-Wolf} reduce el
+error cuadrático medio y da carteras más diversificadas y con mejor
+comportamiento out-of-sample (Sharpe $0{,}68$ frente a $0{,}64$ del muestral). El
+\textbf{estimador PCA}, que retiene los factores principales y conserva el riesgo
+específico de cada activo, obtiene el mejor Sharpe de las estrategias clásicas
+($0{,}69$), aunque más concentrado.
+
+La equivalencia entre el estimador PCA y el modelo factorial APT de Ross
+\cite{Ross1976} constituye uno de los resultados metodológicos más
+relevantes del trabajo: los componentes principales de la matriz de
+covarianza son, bajo condiciones adecuadas, los factores de riesgo
+sistemático del mercado.
+
+\subsection{Sobre la predicción de \texorpdfstring{$\boldsymbol{\mu}$}{μ} con Machine Learning}
+
+Se ha implementado un sistema de predicción de $\boldsymbol{\mu}$ con tres
+modelos (Ridge, Lasso y Random Forest) entrenados de forma agrupada sobre los
+30 activos, con 11 features derivadas exclusivamente de precios.
+
+\textbf{Lasso} es el mejor modelo ML: su Sharpe de $0{,}75$ iguala en la
+práctica a la $1/N$, con el menor turnover (la rotación de la cartera de un mes
+a otro; $0{,}12$) y la mayor diversificación de las carteras optimizadas; la
+regularización $\ell_1$ es especialmente valiosa en entornos de
+baja señal-ruido. \textbf{Random Forest} ($0{,}71$) y \textbf{Ridge} ($0{,}68$)
+son también competitivos; Ridge logra además el menor drawdown del estudio
+($18{,}4\%$). Ninguna de estas
+diferencias, tampoco frente a los baselines, es estadísticamente significativa:
+con 143 meses, los intervalos de confianza del Sharpe son demasiado anchos para
+distinguir las estrategias.
+
+La conclusión más relevante en este ámbito es que \textbf{la viabilidad del ML
+depende sobre todo de compartir información entre activos}: al estimar un
+único modelo agrupado (en torno a 1.000 observaciones, en lugar de 36 por
+activo), incluso un método no lineal como Random Forest se estabiliza y deja
+de sobreajustar.
+
+\subsection{Sobre la comparación con baselines pasivos}
+
+El resultado más honesto de este trabajo, y quizá el más valioso, es que
+\textbf{ninguna cartera optimizada supera de forma estadísticamente
+significativa a los baselines pasivos}: aunque Lasso iguala a la $1/N$ (Sharpe
+$0{,}75$ frente a $0{,}76$) y todas quedan por debajo del SPY ($0{,}90$) en el
+valor puntual, los contrastes de Memmel no permiten rechazar que tengan el mismo
+Sharpe. Es coherente con la literatura \cite{DeMiguel2009} y tiene una
+explicación clara: con 36 meses de ventana, el error de estimación de los 495
+parámetros del modelo domina cualquier ganancia teórica de la optimización. La
+propia $1/N$ lo ilustra: sin estimar ni optimizar nada, y con cero turnover,
+logra un $10{,}7\%$ anualizado con un $14{,}1\%$ de volatilidad.
+
+\subsection{Conclusión final}
+
+La integración de Machine Learning en el modelo de Markowitz produce carteras
+competitivas (la mejor, Lasso, iguala a la $1/N$) cuando la predicción es
+agrupada y fuertemente regularizada, pero ninguna diferencia alcanza
+significación estadística: el error de estimación sigue siendo el factor
+limitante. Así, la principal contribución no es un modelo que gane al mercado,
+sino mostrar con rigor \textit{por qué es tan difícil ganarle}: con datos
+realistas, las diferencias entre estrategias son indistinguibles del ruido. Y
+también qué técnicas ayudan a mitigar ese error de estimación, aunque no a
+eliminarlo.
+
+%--------------------------------------------------------------------
+\section{Líneas futuras de investigación}
+%--------------------------------------------------------------------
+
+Los resultados de este trabajo sugieren varias direcciones de investigación:
+
+\begin{itemize}
+    \item \textbf{Ventanas de estimación más largas} (5--10 años), con un
+          $n/T$ más favorable, a costa de mezclar regímenes de mercado.
+    \item \textbf{Más señal en $\boldsymbol{\mu}$:} features fundamentales y
+          macro (ratios contables, analistas, tipos, VIX) y técnicas de ML más
+          potentes (Gradient Boosting, redes, LSTM), limitadas aquí por lo
+          escaso de los datos (180 meses).
+    \item \textbf{Tratar la incertidumbre de $\boldsymbol{\mu}$:} optimización
+          robusta (minimizar el peor caso en una región de confianza) o
+          enfoques bayesianos como Black-Litterman.
+    \item \textbf{Covarianza dinámica} (GARCH multivariante, EWMA) para
+          correlaciones cambiantes en regímenes de estrés.
+    \item \textbf{Gestión del turnover:} penalizarlo en la función objetivo o
+          como restricción, para limitar los costes de transacción.
+    \item \textbf{Validación en otros mercados} y clases de activos, para medir
+          la generalidad de los resultados.
+\end{itemize}
+
+En definitiva, optimizar carteras con parámetros estimados (no conocidos) sigue
+siendo un problema abierto, en la frontera entre las matemáticas, la estadística
+y las finanzas. Este trabajo ha querido aportar a ese campo rigor matemático,
+honestidad empírica y una implementación reproducible.
