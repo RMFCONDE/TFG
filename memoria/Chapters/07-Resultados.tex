@@ -21,19 +21,19 @@ muestra la evolución del valor acumulado de 1\texteuro{} invertido.
     \caption{Resultados completos del backtesting walk-forward
              (enero 2013 -- diciembre 2024, 143 meses).}
     \label{tab:resultados-globales}
-    \input{../data/outputs/tabla_resultados}
+    \resizebox{\textwidth}{!}{\input{../data/outputs/tabla_resultados}}
 \end{table}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.60\textwidth]{../data/outputs/sharpe_comparacion}
+    \includegraphics[width=0.56\textwidth]{../data/outputs/sharpe_comparacion}
     \caption{Ratio de Sharpe anualizado por estrategia.}
     \label{fig:sharpe-comparacion}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.70\textwidth]{../data/outputs/valor_acumulado}
+    \includegraphics[width=0.66\textwidth]{../data/outputs/valor_acumulado}
     \caption{Evolución de 1\texteuro{} invertido en cada estrategia
              durante el periodo out-of-sample (2013--2024). Las líneas
              discontinuas representan los baselines pasivos.}
@@ -69,9 +69,8 @@ Todas las carteras optimizadas presentan volatilidades muy similares
 La diferencia está en la rentabilidad: el SPY genera un $12{,}9\%$ frente
 al $8{,}3\%$--$9{,}8\%$ de las carteras optimizadas. Esto sugiere que el
 principal lastre de las carteras optimizadas no es un exceso de riesgo,
-sino una \textbf{infraperformance sistemática}: los activos seleccionados
-por el optimizador tienden a tener rentabilidades out-of-sample inferiores
-a las del mercado.
+sino una \textbf{rentabilidad sistemáticamente menor}: los activos que
+selecciona el optimizador rinden, fuera de muestra, menos que el mercado.
 
 %--------------------------------------------------------------------
 \section{Efecto del estimador de covarianza}
@@ -79,10 +78,10 @@ a las del mercado.
 
 La Tabla~\ref{tab:resultados-globales} permite comparar el efecto de los
 tres estimadores de $\boldsymbol{\Sigma}$ cuando $\boldsymbol{\mu}$ se
-estima como media histórica:
+estima como media histórica.
 
 El estimador \textbf{muestral} es el peor (Sharpe $0{,}64$), con la mayor
-concentración (HHI $0{,}15$; $8{,}8$ activos). \textbf{Ledoit-Wolf} lo mejora en
+concentración (HHI $0{,}15$; $8{,}9$ activos). \textbf{Ledoit-Wolf} lo mejora en
 $+0{,}04$ ($0{,}68$), reduce la concentración (HHI $0{,}14$; $10{,}6$ activos) y
 baja el drawdown ($29{,}3\%$ frente a $32{,}3\%$). \textbf{PCA} logra el mejor
 Sharpe clásico ($0{,}69$), algo más rentable pero más concentrado (HHI $0{,}16$;
@@ -102,12 +101,17 @@ rentabilidad, pero menor diversificación.
 Las tres estrategias ML utilizan el estimador de covarianza Ledoit-Wolf y
 se diferencian únicamente en el modelo de predicción de $\boldsymbol{\mu}$:
 
-\textbf{Ridge} (Sharpe $0{,}68$) iguala al baseline clásico y logra el
-\textbf{menor drawdown del estudio} ($18{,}4\%$); \textbf{Lasso} ($0{,}75$) es
-la \textbf{mejor cartera optimizada}, prácticamente igual a la $1/N$, con el
-menor turnover ($0{,}12$) y la mayor diversificación (14,9 activos, HHI
-$0{,}10$); y \textbf{Random Forest} ($0{,}71$) es competitiva y la mejor de las
-no lineales, con turnover moderado ($0{,}36$).
+\begin{itemize}
+    \item \textbf{Lasso} (Sharpe $0{,}75$) es la \textbf{mejor cartera
+          optimizada} y prácticamente iguala a la $1/N$, con el menor turnover
+          ($0{,}12$) y la mayor diversificación de las carteras optimizadas
+          (14,9 activos, HHI $0{,}10$).
+    \item \textbf{Random Forest} ($0{,}71$), el único modelo no lineal, queda
+          en segundo lugar, con un turnover moderado ($0{,}36$).
+    \item \textbf{Ridge} ($0{,}68$) se queda en el Sharpe del clásico de
+          Ledoit-Wolf, pero logra el \textbf{menor drawdown del estudio}
+          ($18{,}4\%$).
+\end{itemize}
 
 \subsection{Análisis del rendimiento de los modelos ML}
 
@@ -124,20 +128,20 @@ coeficientes sin poder predictivo (selección automática) y, en un entorno de m
 baja señal-ruido, produce predicciones parsimoniosas y estables ---de ahí el
 bajísimo turnover de Lasso. De hecho, en muchos meses la validación cruzada elige
 un nivel que anula todos los coeficientes y reduce $\hat{\boldsymbol{\mu}}$ a una
-constante: el modelo reconoce la ausencia de señal explotable, un resultado
-honesto en sí mismo. Todo ello es coherente con la literatura \cite{Gu2020}, que
+constante: cuando los datos no contienen señal aprovechable, el modelo lo
+refleja tal cual, en lugar de forzar una predicción ruidosa. Todo ello es coherente con la literatura \cite{Gu2020}, que
 subraya compartir información entre activos y regularizar con fuerza cuando los
 datos escasean.
 
 \subsection{Turnover y costes de transacción}
 
 La Tabla~\ref{tab:resultados-globales} muestra que el turnover varía
-notablemente: las estrategias con $\boldsymbol{\mu}$ histórico rotan un
-$0{,}13$--$0{,}14$, frente al $0{,}12$ de Lasso, el $0{,}36$ de RF y el
-$0{,}57$ de Ridge.
+notablemente: las estrategias con $\boldsymbol{\mu}$ histórico tienen un
+turnover de $0{,}13$--$0{,}14$, frente al $0{,}12$ de Lasso, el $0{,}36$ de RF
+y el $0{,}57$ de Ridge.
 
-Frente al resultado habitual de que el ML dispara la rotación de la cartera,
-aquí el modelo más parsimonioso (Lasso) alcanza un turnover incluso
+Frente al resultado habitual de que el ML dispara el turnover,
+aquí el modelo más parsimonioso (Lasso) alcanza uno incluso
 \emph{inferior} al de las estrategias clásicas, mientras que Ridge ---que
 mantiene activas todas las features--- es el que más rota. Aun así, los costes
 de transacción siguen siendo relevantes para Ridge y RF: con un coste del
@@ -155,7 +159,8 @@ son inestables mes a mes}.
 %--------------------------------------------------------------------
 
 La Figura~\ref{fig:valor-acumulado} muestra que todas las estrategias
-optimizadas siguen trayectorias similares hasta ~2018, cuando el SPY se despega,
+optimizadas siguen trayectorias similares hasta aproximadamente 2018, cuando el
+SPY se despega,
 impulsado por el excepcional mercado estadounidense de 2019--2024 (recuperación
 post-COVID, auge de las grandes tecnológicas). Es notable que la $1/N$, con cero
 turnover y máxima diversificación, siga de cerca al SPY hasta 2020: refuerza que
@@ -186,6 +191,7 @@ que contrasta si dos estrategias tienen el mismo Sharpe frente a cada baseline
              superior al de la Tabla~\ref{tab:resultados-globales} (geométrico)
              por el efecto del \textit{volatility drag}.}
     \label{tab:significancia}
+    \small
     \input{../data/outputs/tabla_significancia}
 \end{table}
 
