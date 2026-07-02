@@ -1,0 +1,46 @@
+seed: 42
+
+data:
+  start: "2010-01-01"
+  end: "2024-12-31"
+  tickers:
+    - AAPL
+    - MSFT
+    - ORCL
+    - CSCO
+    - INTC
+    - JNJ
+    - PFE
+    - MRK
+    - UNH
+    - JPM
+    - GS
+    - AXP
+    - BAC
+    - HD
+    - MCD
+    - NKE
+    - PG
+    - KO
+    - WMT
+    - DIS
+    - VZ
+    - T
+    - XOM
+    - CVX
+    - CAT
+    - HON
+    - UPS
+    - FCX
+    - NEE
+    - AMT
+  benchmark: "SPY"
+
+optimization:
+  long_only: true
+  budget: 1.0
+  max_weight: 0.20
+
+backtest:
+  estimation_window_days: 756
+  rebalance: "monthly"
