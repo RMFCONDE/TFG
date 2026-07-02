@@ -1,0 +1,21 @@
+[project]
+name = "tfg-carteras"
+version = "0.1.0"
+description = "TFG — Optimización de carteras: Markowitz + Machine Learning"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "yfinance",
+    "cvxpy",
+    "scikit-learn",
+    "scipy",
+    "matplotlib",
+    "seaborn",
+    "pyyaml",
+    "pytest",
+    "jupyter",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
