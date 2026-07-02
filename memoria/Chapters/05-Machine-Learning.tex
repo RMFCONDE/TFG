@@ -1,0 +1,270 @@
+\chapter{Machine Learning para la predicción de \texorpdfstring{$\boldsymbol{\mu}$}{μ}}
+\label{ch:ml}
+
+El Capítulo~\ref{ch:limitaciones} demostró que la estimación de
+$\boldsymbol{\mu}$ es el punto más débil del modelo de Markowitz: la media
+muestral tiene un error estándar comparable al propio parámetro, y ningún
+estimador de $\boldsymbol{\Sigma}$ puede compensar una mala estimación de las
+rentabilidades esperadas. Este capítulo explora si las técnicas de Machine
+Learning pueden mejorar la estimación de $\boldsymbol{\mu}$ explotando
+relaciones predecibles entre las características observables de los activos
+y sus rentabilidades futuras.
+
+%--------------------------------------------------------------------
+\section{Planteamiento del problema predictivo}
+%--------------------------------------------------------------------
+
+\subsection{¿Por qué Machine Learning?}
+
+La estimación tradicional de $\boldsymbol{\mu}$ como media histórica asume
+implícitamente que las rentabilidades son independientes e idénticamente
+distribuidas (i.i.d.). Si esta hipótesis fuera cierta, la media muestral sería
+el estimador óptimo (insesgado y de mínima varianza). Sin embargo, existe
+abundante evidencia empírica de que las rentabilidades no son i.i.d.:
+presentan \textbf{autocorrelación} a corto plazo (momentum, reversión a la
+media), dependencia de la \textbf{volatilidad} (clustering) y sensibilidad a
+\textbf{factores de riesgo} comunes \cite{Cont2001}.
+
+Si existe una función $f$ que relaciona características observables
+$\mathbf{x}_{i,t}$ del activo $i$ en el instante $t$ con su rentabilidad
+futura $r_{i,t+1}$,
+\begin{equation}
+    r_{i,t+1} = f(\mathbf{x}_{i,t}) + \varepsilon_{i,t+1},
+    \label{eq:ml-model}
+\end{equation}
+entonces un modelo de ML puede aproximar $f$ a partir de datos históricos,
+produciendo una estimación de $\mu_{i,t+1} = \E[r_{i,t+1} \mid
+\mathbf{x}_{i,t}]$ potencialmente más precisa que la media incondicional.
+
+La clave está en que el modelo aprende de \textbf{todos los activos}
+simultáneamente (o al menos comparte estructura entre ellos), lo que mitiga
+la maldición de la dimensionalidad temporal: en lugar de estimar una media
+por activo con 36 observaciones, el modelo estima una función $f$ con
+$30 \times 36 = 1080$ observaciones, reduciendo la varianza del estimador.
+
+\subsection{Configuración del problema}
+
+Para cada activo $i \in \{1, \dots, n\}$ y cada mes $t$, definimos:
+
+\begin{itemize}
+    \item \textbf{Target:} $y_{i,t} = r_{i,t+1}$, la rentabilidad logarítmica
+          del activo $i$ en el mes $t+1$.
+    \item \textbf{Features:} $\mathbf{x}_{i,t} \in \mathbb{R}^p$, un vector
+          de $p$ características del activo $i$ calculadas exclusivamente con
+          información disponible hasta el mes $t$ (inclusive).
+\end{itemize}
+
+El modelo se entrena de forma \textbf{agrupada} (\textit{pooled}): se estima una
+única función $f$ común a todos los activos, apilando las observaciones de los
+$n$ activos de la ventana. Así cada ajuste dispone de $n \times 36$
+observaciones en lugar de 36, lo que reduce drásticamente la varianza del
+estimador; las predicciones siguen siendo individualizadas porque cada activo
+entra con sus propias features $\mathbf{x}_{i,t}$.
+
+%--------------------------------------------------------------------
+\section{Ingeniería de características (features)}
+%--------------------------------------------------------------------
+
+La selección de features está guiada por la literatura sobre predictibilidad
+de rentabilidades \cite{Gu2020} y por la restricción fundamental de este
+trabajo: solo se utilizan datos de precio (no fundamentales), ya que el
+objetivo es un modelo puramente técnico que pueda automatizarse sin depender
+de fuentes de datos externas.
+
+\subsection{Features basadas en rentabilidades pasadas}
+
+\begin{itemize}
+    \item \textbf{Rezagos simples:} $r_{i,t}$, $r_{i,t-1}$, $r_{i,t-2}$.
+          Capturan efectos de autocorrelación a muy corto plazo (reversión
+          o continuación).
+    \item \textbf{Momentum:} rentabilidad acumulada en los últimos 3, 6 y 12
+          meses:
+          \begin{equation}
+              \text{mom}_{k}(i,t) = \sum_{j=0}^{k-1} r_{i,\,t-j},
+              \quad k \in \{3, 6, 12\}.
+              \label{eq:momentum}
+          \end{equation}
+          El momentum a 12 meses es uno de los factores más robustos en la
+          literatura de \textit{cross-section} de rentabilidades
+          \cite{Jegadeesh1993}.
+    \item \textbf{Volatilidad realizada:} desviación típica de las
+          rentabilidades de los últimos 12 meses, $\sigma_{i,t}^{(12)}$.
+    \item \textbf{Beta al mercado:} pendiente de la regresión de $r_i$ sobre
+          $r_m$ (SPY) en ventana de 36 meses,
+          $\beta_{i,t} = \Cov_{36\text{m}}(r_i, r_m)/\Var_{36\text{m}}(r_m)$.
+\end{itemize}
+
+\subsection{Features del mercado}
+
+Además de las características propias de cada activo, se incluyen features
+que capturan el contexto de mercado:
+\begin{itemize}
+    \item \textbf{Rezagos del mercado:} $r_{m,t}$, $r_{m,t-1}$ (rentabilidad
+          del SPY).
+    \item \textbf{Volatilidad del mercado:} $\sigma_{m,t}^{(12)}$, desviación
+          típica del SPY en 12 meses.
+\end{itemize}
+
+En total, el vector de features tiene dimensión $p = 11$. La
+Tabla~\ref{tab:features} resume las features utilizadas.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Features utilizadas para la predicción de $r_{i,t+1}$.}
+    \label{tab:features}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Feature} & \textbf{Descripción} \\
+        \midrule
+        \texttt{r\_lag1}, \texttt{r\_lag2}, \texttt{r\_lag3} & Rezagos del activo ($t$, $t-1$, $t-2$) \\
+        \texttt{mom3}, \texttt{mom6}, \texttt{mom12} & Momentum a 3, 6 y 12 meses \\
+        \texttt{vol12} & Volatilidad realizada a 12 meses \\
+        \texttt{beta\_36m} & Beta rolling al SPY (36 meses) \\
+        \texttt{r\_mkt\_lag1}, \texttt{r\_mkt\_lag2} & Rezagos del SPY \\
+        \texttt{r\_mkt\_vol12} & Volatilidad del SPY a 12 meses \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+%--------------------------------------------------------------------
+\section{Modelos de Machine Learning}
+%--------------------------------------------------------------------
+
+Se implementan tres modelos que representan distintos compromisos entre sesgo
+y varianza, flexibilidad e interpretabilidad.
+
+\subsection{Ridge (regularización L2)}
+
+Ridge \cite{HoerlKennard1970} es una regresión lineal con penalización en la
+norma $\ell_2$ de los coeficientes:
+\begin{equation}
+    \hat{\boldsymbol{\beta}}_{\text{Ridge}} =
+    \arg\min_{\boldsymbol{\beta}} \left\{
+    \sum_{t=1}^{T} (y_t - \mathbf{x}_t^T \boldsymbol{\beta})^2
+    + \alpha \sum_{j=1}^{p} \beta_j^2
+    \right\}.
+    \label{eq:ridge}
+\end{equation}
+
+La penalización $\ell_2$ contrae los coeficientes hacia cero sin anularlos:
+reduce la varianza del estimador a cambio de un pequeño sesgo, y es adecuada
+cuando muchas features tienen poder predictivo débil pero no nulo o están muy
+correlacionadas entre sí. En ese caso, una regresión sin penalizar daría
+coeficientes muy grandes e inestables (la matriz $\mathbf{X}^T\mathbf{X}$ queda
+mal condicionada, casi singular); la penalización de Ridge los estabiliza. El
+hiperparámetro $\alpha$ ---de $0$ (MCO) a $\infty$ (todos los coeficientes
+nulos)--- se selecciona por validación cruzada temporal
+(\textit{TimeSeriesSplit}) en 10 valores entre $10^{-3}$ y $10^{2}$. Como el
+entrenamiento es agrupado sobre activos de escalas heterogéneas, las features se
+estandarizan (media 0, varianza 1) usando solo la muestra de entrenamiento.
+
+\subsection{Lasso (regularización L1)}
+
+Lasso \cite{Tibshirani1996} sustituye la penalización $\ell_2$ por $\ell_1$:
+\begin{equation}
+    \hat{\boldsymbol{\beta}}_{\text{Lasso}} =
+    \arg\min_{\boldsymbol{\beta}} \left\{
+    \sum_{t=1}^{T} (y_t - \mathbf{x}_t^T \boldsymbol{\beta})^2
+    + \alpha \sum_{j=1}^{p} |\beta_j|
+    \right\}.
+    \label{eq:lasso}
+\end{equation}
+
+La norma $\ell_1$ produce soluciones \textbf{sparse} (muchos coeficientes
+exactamente cero): Lasso hace selección automática de features y es más
+interpretable que Ridge, a costa de más inestabilidad con features muy
+correlacionadas \cite{Zou2005}. Como en Ridge, las features se estandarizan y
+$\alpha$ se elige por validación cruzada temporal en el mismo rango.
+
+\subsection{Random Forest}
+
+Random Forest es un método no paramétrico basado en un \textit{ensemble} de
+árboles de decisión \cite{Breiman2001}. Cada árbol particiona recursivamente
+el espacio de features para minimizar el error cuadrático medio en cada nodo,
+y el bosque promedia las predicciones de todos los árboles.
+
+Sus principales ventajas aquí son que captura relaciones no lineales e
+interacciones entre features sin especificarlas, es robusto a outliers y a
+features irrelevantes, y el promediado sobre muchos árboles (100 en la
+implementación) reduce la varianza sin aumentar el sesgo.
+
+Para evitar el sobreajuste se limitan la profundidad máxima de cada árbol a 3
+y el número mínimo de muestras por hoja a 5. Estos hiperparámetros, junto con
+el número de árboles (100), se mantienen fijos para todo el backtesting. A
+diferencia de los modelos lineales, Random Forest no requiere estandarizar las
+features, al ser invariante a transformaciones monótonas de cada variable.
+
+%--------------------------------------------------------------------
+\section{Validación temporal (walk-forward)}
+%--------------------------------------------------------------------
+
+\subsection{El peligro del look-ahead}
+
+En la predicción de series temporales financieras, la validación cruzada
+estándar (aleatoria) es metodológicamente incorrecta: al barajar las
+observaciones, se rompe la estructura temporal y el modelo podría entrenarse
+con datos del futuro para predecir el pasado. Esto produce estimaciones
+irrealmente optimistas del rendimiento predictivo y, lo que es más grave,
+contamina la selección de hiperparámetros.
+
+Por esta razón, toda la validación se realiza en régimen walk-forward:
+en cada mes $t$, el modelo solo puede acceder a datos hasta $t$ para
+entrenar, validar hiperparámetros y predecir.
+
+\subsection{Protocolo de backtesting}
+
+En cada mes $t$, el modelo se entrena solo con datos hasta $t$ (ventana de 36
+meses), predice $\hat{\mu}_{i,t+1}$ para cada activo a partir de sus features de
+$t$, y esas predicciones ---junto con $\hat{\boldsymbol{\Sigma}}$--- alimentan la
+optimización de la cartera de máximo Sharpe, cuya rentabilidad se evalúa en
+$t+1$. El ciclo se repite 143 veces (enero 2013 -- diciembre 2024). El
+Capítulo~\ref{ch:metodologia} detalla el protocolo completo y las salvaguardas
+contra el look-ahead.
+
+\subsection{Métricas de evaluación predictiva}
+
+Para evaluar la calidad de las predicciones de $\boldsymbol{\mu}$, se calculan
+las siguientes métricas sobre las predicciones out-of-sample de cada modelo:
+
+\begin{itemize}
+    \item \textbf{RMSE} (Root Mean Square Error):
+          $\sqrt{\frac{1}{nT} \sum_{i,t} (r_{i,t+1} - \hat{\mu}_{i,t})^2}$.
+    \item \textbf{MAE} (Mean Absolute Error):
+          $\frac{1}{nT} \sum_{i,t} |r_{i,t+1} - \hat{\mu}_{i,t}|$.
+    \item \textbf{$R^2$ out-of-sample}:
+          $1 - \frac{\sum_{i,t} (r_{i,t+1} - \hat{\mu}_{i,t})^2}
+          {\sum_{i,t} (r_{i,t+1} - \bar{r})^2}$,
+          donde $\bar{r}$ es la media histórica. Un $R^2$ positivo indica que
+          el modelo ML mejora sobre la media histórica.
+    \item \textbf{Correlación de Pearson} entre $\hat{\boldsymbol{\mu}}$ y
+          $\mathbf{r}_{t+1}$ realizada, agregada a nivel de mes.
+\end{itemize}
+
+Es importante señalar que, en finanzas, incluso un $R^2$ pequeño
+($\approx 0{,}01$--$0{,}05$) puede ser económicamente significativo si se
+traduce en una mejora del ratio de Sharpe de la cartera optimizada.
+
+%--------------------------------------------------------------------
+\section{Conexión con la optimización de carteras}
+%--------------------------------------------------------------------
+
+Conviene subrayar que el objetivo no es minimizar el RMSE de
+$\hat{\boldsymbol{\mu}}$, sino maximizar el rendimiento out-of-sample de la
+cartera: un RMSE bajo no garantiza una buena cartera, y el QP puede
+beneficiarse más de acertar el \textit{orden} (ranking) de los activos que de
+minimizar el error cuadrático. Por eso la evaluación definitiva se hace sobre
+las métricas de cartera (Sharpe, drawdown, turnover) del
+Capítulo~\ref{ch:resultados}, y las predictivas se reportan solo como
+diagnóstico complementario.
+
+%--------------------------------------------------------------------
+\section{Síntesis}
+
+En resumen, este capítulo aborda la principal limitación del modelo clásico
+---la estimación de $\boldsymbol{\mu}$--- con un marco de Machine Learning que
+usa 11 features exclusivamente de precio, tres modelos complementarios (Ridge,
+Lasso y Random Forest), una validación temporal estricta sin look-ahead y, como
+métrica final, el rendimiento de la cartera y no el RMSE de la predicción. El
+Capítulo~\ref{ch:metodologia} detalla cómo se integran estos modelos con los
+estimadores de covarianza del Capítulo~\ref{ch:limitaciones} en el backtesting
+walk-forward.
