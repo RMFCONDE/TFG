@@ -1,0 +1,277 @@
+\chapter{Metodología y diseño experimental}
+\label{ch:metodologia}
+
+Este capítulo describe la metodología completa del estudio: los datos
+utilizados, el esquema de backtesting walk-forward, las carteras evaluadas
+y las métricas de rendimiento. El objetivo es que el experimento sea
+completamente reproducible con los datos y el código proporcionados.
+
+%--------------------------------------------------------------------
+\section{Datos}
+%--------------------------------------------------------------------
+
+\subsection{Universo de activos}
+
+El universo de inversión está compuesto por 30 acciones del S\&P 500,
+seleccionadas para cubrir los principales sectores económicos con al menos
+dos representantes por sector. La Tabla~\ref{tab:universo} detalla los
+tickers y sus sectores GICS.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Universo de 30 activos por sector GICS.}
+    \label{tab:universo}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Sector} & \textbf{Tickers} \\
+        \midrule
+        Tecnología & AAPL, MSFT, ORCL, CSCO, INTC \\
+        Salud & JNJ, PFE, MRK, UNH \\
+        Finanzas & JPM, GS, AXP, BAC \\
+        Consumo discrecional & HD, MCD, NKE, DIS \\
+        Consumo básico & PG, KO, WMT \\
+        Comunicaciones & VZ, T \\
+        Energía & XOM, CVX \\
+        Industriales & CAT, HON, UPS \\
+        Materiales & FCX \\
+        Utilities & NEE, AMT \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+El benchmark de mercado es el \textbf{SPY} (SPDR S\&P 500 ETF Trust), que
+replica el S\&P 500 y no forma parte del universo a optimizar.
+
+\subsection{Periodo y frecuencia}
+
+\begin{itemize}
+    \item \textbf{Periodo total:} 1 de enero de 2010 -- 31 de diciembre de
+          2024 (15 años).
+    \item \textbf{Datos diarios:} 3.773 días de negociación para 31 tickers
+          (30 acciones + SPY).
+    \item \textbf{Frecuencia de trabajo:} mensual. Los retornos logarítmicos
+          diarios se agregan a frecuencia mensual mediante suma:
+          $r_t^{\text{mensual}} = \sum_{d \in \text{mes}(t)} r_d^{\text{diaria}}$,
+          propiedad que deriva de la aditividad de los log-retornos
+          (ecuación~\ref{eq:aditividad-log}).
+    \item \textbf{Meses resultantes:} 180 meses (enero 2010 -- diciembre 2024).
+\end{itemize}
+
+\subsection{Fuente y preprocesado}
+
+Los precios ajustados (cierre) se descargan de \textbf{Yahoo Finance} a
+través de la librería \texttt{yfinance} de Python. El preprocesado consiste en:
+
+\begin{enumerate}
+    \item \textbf{Cálculo de retornos logarítmicos diarios:}
+          $r_t = \ln(P_t / P_{t-1})$.
+    \item \textbf{Limpieza:} eliminación de días sin negociación,
+          \textit{forward-fill} de datos faltantes.
+    \item \textbf{Agregación mensual:} suma de retornos diarios dentro de
+          cada mes natural.
+\end{enumerate}
+
+Se reconoce explícitamente la presencia de \textbf{sesgo de supervivencia}:
+el universo está compuesto por constituyentes actuales (2024) del S\&P 500,
+no por los constituyentes históricos. Esto implica que las empresas que
+quebraron o fueron excluidas del índice durante el periodo de estudio no
+están representadas. El sesgo tiende a sobreestimar ligeramente las
+rentabilidades históricas, pero su impacto en un estudio de asignación de
+activos como este es limitado, ya que el objetivo es comparar metodologías
+de optimización, no estimar rentabilidades absolutas.
+
+%--------------------------------------------------------------------
+\section{Esquema de backtesting walk-forward}
+%--------------------------------------------------------------------
+
+El experimento sigue un protocolo de backtesting walk-forward con
+rebalanceo mensual, que constituye el estándar metodológico en la literatura
+de optimización de carteras \cite{DeMiguel2009}.
+
+\subsection{Parámetros del backtesting}
+
+\begin{itemize}
+    \item \textbf{Ventana de estimación:} 36 meses (3 años).
+    \item \textbf{Frecuencia de rebalanceo:} mensual.
+    \item \textbf{Periodo out-of-sample:} enero 2013 -- diciembre 2024
+          (144 meses, de los cuales se evalúan 143 por el desfase de la
+          predicción).
+    \item \textbf{Restricciones:} long-only ($w_i \ge 0$), peso máximo por
+          activo $w_i \le 0{,}20$, presupuesto $\sum_i w_i = 1$.
+\end{itemize}
+
+\subsection{Procedimiento mensual}
+
+Para cada mes $t$ desde enero de 2013 ($t = 37$) hasta noviembre de 2024
+($t = 179$): se toma la ventana de 36 meses ($t-35, \dots, t$); se estima
+$\boldsymbol{\Sigma}$ con uno de los tres estimadores (muestral, Ledoit-Wolf o
+PCA al 80\% de varianza) y $\boldsymbol{\mu}$ con uno de los cuatro métodos
+(media histórica, Ridge, Lasso o RF); se resuelve el QP de mínimo riesgo
+(ecuación~\ref{eq:qp-riesgo}) barriendo el target $\mu^*$ y se toma el punto de
+máximo Sharpe, que da los pesos $\mathbf{w}_t$; y se evalúa la rentabilidad
+realizada $r_{p,t+1} = \mathbf{w}_t^T \mathbf{r}_{t+1}$.
+
+Esquemáticamente, para un total de $T=180$ meses:
+\[
+\underbrace{r_1, \dots, r_{36}}_{\text{Train}_1} \to
+\underbrace{r_{37}}_{\text{Pred}_1} \quad
+\underbrace{r_2, \dots, r_{37}}_{\text{Train}_2} \to
+\underbrace{r_{38}}_{\text{Pred}_2} \quad
+\cdots \quad
+\underbrace{r_{144}, \dots, r_{179}}_{\text{Train}_{143}} \to
+\underbrace{r_{180}}_{\text{Pred}_{143}}
+\]
+
+donde Train$_k$ es la ventana de 36 meses usada para estimar
+$\boldsymbol{\mu}$ y $\boldsymbol{\Sigma}$ en la iteración $k$, y Pred$_k$
+es el mes out-of-sample cuya rentabilidad $r_{p,k}$ se evalúa.
+
+\subsection{Prevención del look-ahead}
+
+Para evitar el look-ahead se toman las siguientes medidas:
+\begin{itemize}
+    \item La estimación de $\boldsymbol{\Sigma}$ en el mes $t$ solo utiliza
+          rentabilidades hasta $t$.
+    \item Las features para la predicción ML en $t$ solo utilizan datos
+          hasta $t$ (ver Capítulo~\ref{ch:ml}).
+    \item La rentabilidad out-of-sample $r_{p,t+1}$ \textbf{no} se utiliza
+          en ningún paso de la optimización para el mes $t$.
+    \item La validación cruzada para la selección de hiperparámetros de los
+          modelos ML se realiza con \texttt{TimeSeriesSplit}, que respeta el
+          orden cronológico.
+\end{itemize}
+
+%--------------------------------------------------------------------
+\section{Carteras evaluadas}
+%--------------------------------------------------------------------
+
+Se evalúan 8 carteras, presentadas en la Tabla~\ref{tab:carteras-evaluadas}.
+Las tres primeras corresponden al modelo de Markowitz clásico con distintos
+estimadores de $\boldsymbol{\Sigma}$, las tres siguientes incorporan
+predicciones ML de $\boldsymbol{\mu}$, y las dos últimas son baselines
+pasivos.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Carteras evaluadas en el experimento.}
+    \label{tab:carteras-evaluadas}
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{Cartera} & \textbf{Estimador de $\boldsymbol{\Sigma}$} & \textbf{Estimador de $\boldsymbol{\mu}$} \\
+        \midrule
+        Markowitz (muestral) & Muestral & Media histórica \\
+        Markowitz (Ledoit-Wolf) & Ledoit-Wolf & Media histórica \\
+        Markowitz (PCA) & PCA (80\% var.) & Media histórica \\
+        Markowitz + Ridge & Ledoit-Wolf & Ridge \\
+        Markowitz + Lasso & Ledoit-Wolf & Lasso \\
+        Markowitz + RF & Ledoit-Wolf & Random Forest \\
+        1/N (equiponderada) & -- & -- \\
+        SPY (mercado) & -- & -- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{Nota sobre la elección de $\boldsymbol{\Sigma}$ para las estrategias
+ML:} se utiliza el estimador de Ledoit-Wolf para todas ellas, por ser el más
+fiable en términos de diversificación y estabilidad
+(Capítulo~\ref{ch:limitaciones}). Esto permite aislar el efecto de la mejora
+en $\boldsymbol{\mu}$ sin que las diferencias en $\boldsymbol{\Sigma}$
+contaminen la comparación.
+
+%--------------------------------------------------------------------
+\section{Métricas de evaluación}
+%--------------------------------------------------------------------
+
+\subsection{Métricas de rentabilidad-riesgo}
+
+Sobre la serie de 143 rentabilidades mensuales out-of-sample de cada
+cartera, se calculan:
+
+\begin{itemize}
+    \item \textbf{Rentabilidad anualizada} (compuesta geométricamente):
+          \begin{equation}
+              r_{\text{anual}} = \Bigl(\prod_{t=1}^{T} (1 + r_{p,t})
+              \Bigr)^{12/T} - 1.
+              \label{eq:rent-anual}
+          \end{equation}
+    \item \textbf{Volatilidad anualizada:}
+          $\sigma_{\text{anual}} = \sigma_{\text{mensual}} \cdot \sqrt{12}$.
+    \item \textbf{Ratio de Sharpe} (anualizado, $r_f = 0$):
+          $S_p = r_{\text{anual}} / \sigma_{\text{anual}}$.
+    \item \textbf{Máximo drawdown:} máxima caída desde un pico anterior en la
+          curva de valor acumulado. Expresado como:
+          \begin{equation}
+              \text{MDD} = \max_{t} \left(
+              1 - \frac{V_t}{\max_{s \le t} V_s}
+              \right),
+              \label{eq:mdd}
+          \end{equation}
+          donde $V_t = \prod_{s=1}^{t} (1 + r_{p,s})$ es el valor acumulado
+          de la cartera en el mes $t$.
+\end{itemize}
+
+\subsection{Métricas de composición de cartera}
+
+\begin{itemize}
+    \item \textbf{Turnover medio:} mide la rotación de la cartera entre
+          rebalanceos consecutivos,
+          \begin{equation}
+              \text{TO} = \frac{1}{2(T-1)} \sum_{t=2}^{T}
+              \sum_{i=1}^{n} |w_{i,t} - w_{i,t-1}|.
+              \label{eq:turnover}
+          \end{equation}
+          El factor $1/2$ normaliza el turnover entre 0 (cartera estática)
+          y 1 (rotación completa). Un turnover elevado implica mayores costes
+          de transacción.
+    \item \textbf{Índice Herfindahl-Hirschman (HHI) medio:}
+          $\text{HHI} = \frac{1}{T} \sum_t \sum_i w_{i,t}^2$.
+          Mide la concentración de la cartera: $1/n$ para la equiponderada,
+          $1$ para un solo activo.
+    \item \textbf{Número efectivo de activos:} media del número de activos
+          con peso $> 0{,}1\%$ en cada rebalanceo.
+\end{itemize}
+
+\subsection{Métricas de predicción ML}
+
+Para los modelos de ML se reportan además el RMSE, el MAE y el $R^2$
+out-of-sample de las predicciones de $\boldsymbol{\mu}$ (definidos en el
+Capítulo~\ref{ch:ml}); un $R^2$ negativo indica que el modelo predice peor que
+la media histórica, aunque la cartera podría aun así mejorar a la clásica si
+acierta el orden (ranking) de los activos.
+
+%--------------------------------------------------------------------
+\section{Implementación y reproducibilidad}
+%--------------------------------------------------------------------
+
+El código está implementado en Python 3.13 y organizado en módulos
+independientes bajo \texttt{src/}:
+
+\begin{itemize}
+    \item \texttt{data\_ingest/}: descarga y preprocesado de datos.
+    \item \texttt{optimization/}: optimización QP (\texttt{cvxpy}),
+          estimación de covarianza (\texttt{scikit-learn}) y restricciones.
+    \item \texttt{ml/}: feature engineering, modelos (Ridge, Lasso, RF) y
+          pipeline de predicción.
+    \item \texttt{backtest/}: motor de backtesting walk-forward y métricas
+          de evaluación.
+\end{itemize}
+
+La reproducibilidad está garantizada mediante:
+\begin{itemize}
+    \item Semilla fija (\texttt{seed = 42}) para todos los componentes
+          aleatorios.
+    \item Versiones de dependencias congeladas en \texttt{requirements.txt}.
+    \item Datos descargables automáticamente desde Yahoo Finance.
+    \item Scripts de ejecución en \texttt{scripts/} que generan todas las
+          tablas y figuras de la memoria.
+\end{itemize}
+
+%--------------------------------------------------------------------
+\section{Síntesis}
+
+El diseño experimental combina 6 carteras optimizadas (3 estimadores de
+$\boldsymbol{\Sigma}$ $\times$ 2 enfoques de $\boldsymbol{\mu}$) y 2 baselines
+pasivos, un backtesting walk-forward de 143 meses out-of-sample (ventanas de 36
+meses, rebalanceo mensual) y métricas de rentabilidad-riesgo, composición y
+calidad predictiva. El Capítulo~\ref{ch:resultados} presenta los resultados y
+el Capítulo~\ref{ch:conclusiones}, las conclusiones.
