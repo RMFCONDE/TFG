@@ -13,9 +13,8 @@ completamente reproducible con los datos y el código proporcionados.
 \subsection{Universo de activos}
 
 El universo de inversión está compuesto por 30 acciones del S\&P 500,
-seleccionadas para cubrir los principales sectores económicos con al menos
-dos representantes por sector. La Tabla~\ref{tab:universo} detalla los
-tickers y sus sectores GICS.
+seleccionadas de modo que cubren los once sectores GICS. La
+Tabla~\ref{tab:universo} detalla los tickers y sus sectores.
 
 \begin{table}[htbp]
     \centering
@@ -28,19 +27,20 @@ tickers y sus sectores GICS.
         Tecnología & AAPL, MSFT, ORCL, CSCO, INTC \\
         Salud & JNJ, PFE, MRK, UNH \\
         Finanzas & JPM, GS, AXP, BAC \\
-        Consumo discrecional & HD, MCD, NKE, DIS \\
+        Consumo discrecional & HD, MCD, NKE \\
         Consumo básico & PG, KO, WMT \\
-        Comunicaciones & VZ, T \\
+        Comunicaciones & VZ, T, DIS \\
         Energía & XOM, CVX \\
         Industriales & CAT, HON, UPS \\
         Materiales & FCX \\
-        Utilities & NEE, AMT \\
+        Utilities & NEE \\
+        Inmobiliario & AMT \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-El benchmark de mercado es el \textbf{SPY} (SPDR S\&P 500 ETF Trust), que
-replica el S\&P 500 y no forma parte del universo a optimizar.
+Como referencia de mercado se utiliza el \textbf{SPY} (SPDR S\&P 500 ETF
+Trust), que replica el S\&P 500 y no forma parte del universo a optimizar.
 
 \subsection{Periodo y frecuencia}
 
@@ -107,16 +107,17 @@ Para cada mes $t$ desde enero de 2013 ($t = 37$) hasta noviembre de 2024
 $\boldsymbol{\Sigma}$ con uno de los tres estimadores (muestral, Ledoit-Wolf o
 PCA al 80\% de varianza) y $\boldsymbol{\mu}$ con uno de los cuatro métodos
 (media histórica, Ridge, Lasso o RF); se resuelve el QP de mínimo riesgo
-(ecuación~\ref{eq:qp-riesgo}) barriendo el target $\mu^*$ y se toma el punto de
+(ecuación~\ref{eq:qp-riesgo}) barriendo el objetivo de rentabilidad $\mu^*$ y
+se toma el punto de
 máximo Sharpe, que da los pesos $\mathbf{w}_t$; y se evalúa la rentabilidad
 realizada $r_{p,t+1} = \mathbf{w}_t^T \mathbf{r}_{t+1}$.
 
 Esquemáticamente, para un total de $T=180$ meses:
 \[
-\underbrace{r_1, \dots, r_{36}}_{\text{Train}_1} \to
-\underbrace{r_{37}}_{\text{Pred}_1} \quad
-\underbrace{r_2, \dots, r_{37}}_{\text{Train}_2} \to
-\underbrace{r_{38}}_{\text{Pred}_2} \quad
+\underbrace{r_2, \dots, r_{37}}_{\text{Train}_1} \to
+\underbrace{r_{38}}_{\text{Pred}_1} \quad
+\underbrace{r_3, \dots, r_{38}}_{\text{Train}_2} \to
+\underbrace{r_{39}}_{\text{Pred}_2} \quad
 \cdots \quad
 \underbrace{r_{144}, \dots, r_{179}}_{\text{Train}_{143}} \to
 \underbrace{r_{180}}_{\text{Pred}_{143}}
@@ -227,8 +228,8 @@ cartera, se calculan:
           $\text{HHI} = \frac{1}{T} \sum_t \sum_i w_{i,t}^2$.
           Mide la concentración de la cartera: $1/n$ para la equiponderada,
           $1$ para un solo activo.
-    \item \textbf{Número efectivo de activos:} media del número de activos
-          con peso $> 0{,}1\%$ en cada rebalanceo.
+    \item \textbf{Número medio de activos en cartera:} media del número de
+          activos con peso $> 0{,}1\%$ en cada rebalanceo.
 \end{itemize}
 
 \subsection{Métricas de predicción ML}
@@ -256,6 +257,12 @@ independientes bajo \texttt{src/}:
           de evaluación.
 \end{itemize}
 
+La carpeta \texttt{tests/} contiene los tests que validan la implementación:
+la coincidencia de la solución numérica del QP con la solución analítica y el
+cumplimiento de las condiciones KKT (Capítulo~\ref{ch:formulacion}). Se incluye
+además, en \texttt{demo/}, una demostración web interactiva del optimizador,
+como material de apoyo a la presentación del trabajo.
+
 La reproducibilidad está garantizada mediante:
 \begin{itemize}
     \item Semilla fija (\texttt{seed = 42}) para todos los componentes
@@ -269,9 +276,9 @@ La reproducibilidad está garantizada mediante:
 %--------------------------------------------------------------------
 \section{Síntesis}
 
-El diseño experimental combina 6 carteras optimizadas (3 estimadores de
-$\boldsymbol{\Sigma}$ $\times$ 2 enfoques de $\boldsymbol{\mu}$) y 2 baselines
-pasivos, un backtesting walk-forward de 143 meses out-of-sample (ventanas de 36
+El diseño experimental combina 6 carteras optimizadas (tres clásicas, una por
+estimador de $\boldsymbol{\Sigma}$, y tres con $\boldsymbol{\mu}$ predicho por
+ML sobre Ledoit-Wolf) y 2 baselines pasivos, un backtesting walk-forward de 143 meses out-of-sample (ventanas de 36
 meses, rebalanceo mensual) y métricas de rentabilidad-riesgo, composición y
 calidad predictiva. El Capítulo~\ref{ch:resultados} presenta los resultados y
 el Capítulo~\ref{ch:conclusiones}, las conclusiones.
