@@ -1,202 +1,157 @@
 \chapter{Estado del arte}
 \label{ch:estado-arte}
 
-La optimización de carteras es uno de los problemas más estudiados de las
-finanzas cuantitativas. Desde su formulación original a mediados del siglo~XX,
-la disciplina ha evolucionado en torno a una tensión persistente: la elegancia
-del modelo teórico frente a la fragilidad de su aplicación práctica, dominada
-por el error con que se estiman sus parámetros. Este capítulo revisa esa
-evolución ---de la teoría moderna de carteras a la irrupción del aprendizaje
-automático--- con el doble objetivo de situar las aportaciones más relevantes
-de la literatura y de delimitar el espacio que ocupa este trabajo.
+La optimización de carteras es uno de los problemas más estudiados en finanzas
+cuantitativas. Desde que se formuló, a mediados del siglo~XX, tiene siempre el
+mismo problema de fondo: un modelo elegante sobre el papel pero frágil en la
+práctica, porque depende de estimar bien unos parámetros que casi nunca se
+conocen del todo. Este capítulo repasa cómo ha evolucionado el campo ---de la
+teoría moderna de carteras al aprendizaje automático--- para ver qué se ha
+hecho hasta ahora y dónde encaja este trabajo.
 
 %--------------------------------------------------------------------
 \section{De la teoría moderna de carteras al CAPM y la APT}
 %--------------------------------------------------------------------
 
-El punto de partida es el trabajo seminal de \citet{Markowitz1952}, que
-formalizó la selección de carteras como un compromiso entre la rentabilidad
-esperada y el riesgo, medido este último por la varianza. Su principal
-aportación conceptual fue demostrar que el riesgo de una cartera no es la suma
-de los riesgos individuales, sino que depende crucialmente de las covarianzas
-entre activos: la diversificación permite reducir el riesgo sin sacrificar
-rentabilidad esperada. Este marco media-varianza constituye todavía hoy el
-lenguaje básico de la gestión cuantitativa.
+El punto de partida es \citet{Markowitz1952}, que planteó la selección de
+carteras como un equilibrio entre rentabilidad esperada y riesgo (la varianza).
+Su idea central: el riesgo de una cartera no es la suma de los riesgos
+individuales, sino que depende de las covarianzas entre activos; por eso
+diversificar reduce el riesgo sin renunciar a rentabilidad. Ese marco
+media-varianza sigue siendo el lenguaje básico de la gestión cuantitativa.
 
-Poco después, \citet{Tobin1958} introdujo el \textit{teorema de separación}: al
-incorporar un activo libre de riesgo, la decisión de inversión se descompone en
-dos etapas independientes ---la elección de una única cartera óptima de activos
-con riesgo (la cartera tangente) y su combinación con el activo seguro---. Esta
-idea pavimentó el camino hacia los modelos de equilibrio. El \textit{Capital
-Asset Pricing Model} (CAPM), desarrollado de forma independiente por
-\citet{Sharpe1964} y \citet{Lintner1965}, postuló que, en equilibrio, la
-rentabilidad esperada de un activo es una función lineal de su riesgo
-sistemático (la beta respecto al mercado). Como alternativa más general,
-\citet{Ross1976} propuso la \textit{Arbitrage Pricing Theory} (APT), que
-explica las rentabilidades mediante varios factores de riesgo sistemáticos en
-lugar de uno solo, sin apoyarse en los supuestos de equilibrio del CAPM.
+\citet{Tobin1958} añadió el \textit{teorema de separación}: con un activo libre
+de riesgo, la decisión se parte en dos ---elegir la cartera óptima de activos
+con riesgo (la tangente) y combinarla con el activo seguro---. De ahí surgieron
+los modelos de equilibrio: el \textit{CAPM} de \citet{Sharpe1964} y
+\citet{Lintner1965}, según el cual la rentabilidad esperada de un activo depende
+linealmente de su riesgo sistemático (la beta), y la \textit{Arbitrage Pricing
+Theory} de \citet{Ross1976}, que lo generaliza a varios factores de riesgo y sin
+supuestos de equilibrio.
 
-En el plano matemático, \citet{Merton1972} obtuvo la solución analítica
-cerrada de la frontera eficiente en ausencia de restricciones de desigualdad,
-mostrando que el conjunto de carteras de mínima varianza describe una hipérbola
-en el plano riesgo-rentabilidad. Este resultado, que se retoma con detalle en
-el Capítulo~\ref{ch:formulacion}, es la base sobre la que se construye toda la
-maquinaria de optimización del presente trabajo.
+En el plano matemático, \citet{Merton1972} obtuvo la solución analítica de la
+frontera eficiente (sin restricciones de desigualdad) y mostró que las carteras
+de mínima varianza forman una hipérbola en el plano riesgo-rentabilidad. Ese
+resultado, que se desarrolla en el Capítulo~\ref{ch:formulacion}, es la base de
+la optimización de este trabajo.
 
 %--------------------------------------------------------------------
 \section{El problema del error de estimación}
 %--------------------------------------------------------------------
 
-La elegancia del modelo de Markowitz contrasta con su comportamiento práctico.
-El modelo requiere como entradas el vector de rentabilidades esperadas y la
-matriz de covarianzas, parámetros que en la práctica no se conocen y deben
-estimarse a partir de datos históricos. \citet{Merton1980} fue uno de los
-primeros en señalar que estimar la rentabilidad esperada es mucho más difícil
-que estimar las varianzas y covarianzas: mientras que la precisión de estas
-últimas mejora al aumentar la frecuencia de muestreo, la de las primeras solo
-mejora ampliando el horizonte temporal, lo que exige series de datos
-inviablemente largas.
+El modelo funciona en teoría, pero se complica al aplicarlo: necesita el vector
+de rentabilidades esperadas y la matriz de covarianzas, y ninguno se conoce
+---hay que estimarlos con datos históricos. \citet{Merton1980} avisó de que
+estimar la rentabilidad esperada es mucho más difícil que estimar covarianzas:
+la precisión de estas mejora al muestrear más a menudo, pero la de aquella solo
+mejora con horizontes muy largos, poco realistas.
 
-Las consecuencias de este hecho son severas. \citet{BestGrauer1991} demostraron
-analíticamente que las carteras eficientes son extremadamente sensibles a
-pequeñas variaciones en las rentabilidades esperadas estimadas: cambios mínimos
-en las medias producen reasignaciones drásticas de los pesos. En la misma línea,
-\citet{Michaud1989} acuñó la célebre expresión de que la optimización
-media-varianza actúa como un \textit{«maximizador del error de estimación»},
-ya que tiende a asignar pesos desproporcionados precisamente a aquellos activos
-cuya rentabilidad ha sido sobrestimada por azar; de ahí que las carteras
-``optimizadas'' a menudo rindan peor, fuera de muestra, que alternativas
-ingenuas.
+Las consecuencias son serias. \citet{BestGrauer1991} demostraron que las
+carteras eficientes son muy sensibles a las rentabilidades esperadas estimadas:
+cambios mínimos en las medias reasignan los pesos por completo. \citet{Michaud1989}
+definió la optimización media-varianza como un \textit{«maximizador del error de
+estimación»}, porque da pesos desproporcionados a los activos cuya rentabilidad
+se ha sobrestimado por azar; por eso las carteras ``optimizadas'' rinden a menudo
+peor, fuera de muestra, que otras ingenuas.
 
-La evidencia empírica más influyente en este sentido es la de
-\citet{DeMiguel2009}, quienes compararon catorce modelos de optimización frente
-a la sencilla regla de diversificación ingenua $1/N$ (repartir el capital por
-igual entre todos los activos). Su conclusión fue contundente: ninguna de las
-estrategias optimizadas superaba consistentemente a la $1/N$ fuera de muestra, y
-estimaron que se necesitarían ventanas de estimación de miles de meses para que
-la ventaja teórica de la optimización compensara el error de estimación. Este
-resultado es el referente directo frente al que se contrastan los hallazgos del
-presente trabajo.
+La evidencia más influyente es la de \citet{DeMiguel2009}: compararon catorce
+modelos de optimización con la regla ingenua $1/N$ (repartir el capital por
+igual) y ninguno la batió de forma consistente fuera de muestra; calcularon que
+harían falta ventanas de miles de meses para que optimizar compensara el error
+de estimación. Es el referente directo con el que se comparan los resultados de
+este trabajo.
 
 %--------------------------------------------------------------------
 \section{Mejoras en la estimación de la matriz de covarianza}
 %--------------------------------------------------------------------
 
-Aunque la covarianza es más fácil de estimar que la rentabilidad esperada,
-también sufre cuando el número de activos es comparable al de observaciones: la
-matriz de covarianza muestral se vuelve mal condicionada y produce carteras
-inestables. Una de las soluciones más exitosas es el \textit{shrinkage} de
-\citet{Ledoit2004}, que estima la covarianza como una combinación convexa, de
-intensidad óptima, entre la matriz muestral y un objetivo bien condicionado (la
-matriz identidad escalada). El estimador resultante está mejor condicionado,
-reduce el error cuadrático medio y da lugar a carteras más estables y
-diversificadas.
+La covarianza se estima mejor que la rentabilidad esperada, pero también falla
+cuando el número de activos se acerca al de observaciones: la matriz muestral
+queda mal condicionada y da carteras inestables. La solución más usada es el
+\textit{shrinkage} de \citet{Ledoit2004}, que mezcla la matriz muestral con un
+objetivo bien condicionado (la identidad escalada) en la proporción óptima; el
+resultado reduce el error cuadrático medio y da carteras más estables.
 
-Una vía complementaria es la imposición de una estructura de factores.
-\citet{FamaFrench1993} mostraron que un reducido número de factores comunes
----el mercado, el tamaño y el valor--- explica buena parte de la variación
-conjunta de las rentabilidades de las acciones. Modelar la covarianza a través
-de pocos factores reduce drásticamente el número de parámetros a estimar y
-filtra el ruido idiosincrásico; esta idea enlaza con la APT de
-\citet{Ross1976} y con la descomposición en componentes principales que se
-emplea en este trabajo como tercer estimador de la covarianza
+Otra vía es imponer una estructura de factores. \citet{FamaFrench1993} mostraron
+que unos pocos factores comunes ---mercado, tamaño y valor--- explican buena
+parte de cómo se mueven juntas las rentabilidades. Modelar la covarianza con
+pocos factores reduce los parámetros a estimar y filtra el ruido propio de cada
+activo; la idea conecta con la APT de \citet{Ross1976} y con la descomposición en
+componentes principales que este trabajo usa como tercer estimador
 (Capítulo~\ref{ch:limitaciones}).
 
 %--------------------------------------------------------------------
 \section{Enfoques bayesianos e incorporación de visiones}
 %--------------------------------------------------------------------
 
-Una familia distinta de soluciones aborda directamente el error en las
-rentabilidades esperadas mediante la inferencia bayesiana. \citet{Jorion1986}
-aplicó el estimador de Bayes-Stein, que contrae las rentabilidades esperadas
-individuales hacia un valor común (típicamente el de la cartera de mínima
-varianza), reduciendo la varianza del estimador y mejorando el rendimiento
-fuera de muestra. El enfoque más conocido en la práctica profesional es, no
-obstante, el modelo de \citet{BlackLitterman1992}, que parte de las
-rentabilidades implícitas en el equilibrio de mercado y las combina, en un marco
-bayesiano, con las ``visiones'' subjetivas del inversor. El resultado son
-carteras más estables e intuitivas que las que produce la optimización
-media-varianza directa, lo que mitiga el problema de las asignaciones extremas.
-Estos enfoques son conceptualmente afines a la sustitución del estimador ingenuo
-de la rentabilidad esperada por una predicción mejor informada, que es
-precisamente lo que en este trabajo se aborda mediante el aprendizaje
-automático.
+Otra familia de soluciones ataca el error en las rentabilidades esperadas con
+inferencia bayesiana. \citet{Jorion1986} aplicó el estimador de Bayes-Stein, que
+acerca las rentabilidades esperadas a un valor común y así reduce la varianza del
+estimador. El más conocido en la práctica es el modelo de
+\citet{BlackLitterman1992}, que combina, de forma bayesiana, las rentabilidades
+implícitas del mercado con las ``visiones'' del inversor, y evita las
+asignaciones extremas. Todos van en la misma dirección que este trabajo
+---sustituir el estimador ingenuo de la rentabilidad esperada por una predicción
+mejor informada---, aquí con aprendizaje automático.
 
 %--------------------------------------------------------------------
 \section{Predicción de rentabilidades y aprendizaje automático}
 %--------------------------------------------------------------------
 
-La pregunta de fondo ---¿es posible predecir las rentabilidades?--- tiene una
-respuesta matizada. Por un lado, la literatura ha documentado anomalías
-empíricas explotables, como el efecto \textit{momentum} de \citet{Jegadeesh1993},
-según el cual los activos que han obtenido buenas rentabilidades en el pasado
-reciente tienden a seguir haciéndolo a corto plazo. Por otro,
-\citet{Cont2001} sistematizó los \textit{hechos estilizados} de las series
-financieras ---colas pesadas, ausencia de autocorrelación lineal en los
-rendimientos y agrupamiento de la volatilidad---, que limitan severamente la
-predictibilidad de la rentabilidad y advierten contra los supuestos de
-normalidad.
+¿Se pueden predecir las rentabilidades? La respuesta es a medias. Hay anomalías
+aprovechables, como el \textit{momentum} de \citet{Jegadeesh1993} (los activos
+que han rendido bien hace poco tienden a seguir), pero \citet{Cont2001} recopiló
+los \textit{hechos estilizados} de las series financieras ---colas pesadas,
+ausencia de autocorrelación lineal y agrupamiento de la volatilidad---, que
+limitan mucho esa predictibilidad y desaconsejan suponer normalidad.
 
-En la última década, el aprendizaje automático ha irrumpido con fuerza en este
-terreno. El estudio de referencia es el de \citet{Gu2020}, que evaluó de forma
-sistemática un amplio catálogo de métodos ---desde regresiones penalizadas hasta
-árboles y redes neuronales--- para la predicción de rentabilidades en un gran
-panel de acciones. Sus conclusiones son especialmente relevantes para este
-trabajo: los métodos no lineales pueden capturar interacciones que los lineales
-ignoran, pero las ganancias predictivas son modestas (con $R^2$ fuera de muestra
-muy pequeños), y la regularización resulta decisiva para evitar el sobreajuste
-en un entorno de baja señal-ruido. Entre los métodos concretos, este trabajo
-emplea los \textit{Random Forests} de \citet{Breiman2001} ---un modelo no
-lineal robusto basado en el promediado de árboles--- y dos regresiones
-regularizadas: el \textit{Ridge} y el \textit{Lasso}. Este último, emparentado
-con la \textit{elastic net} de \citet{Zou2005}, realiza además selección
-automática de variables, lo que resulta especialmente útil en entornos de baja
-señal-ruido. Estas predicciones de la rentabilidad esperada son las que
-alimentan el optimizador.
+En la última década el aprendizaje automático ha crecido mucho en este campo. El
+estudio de referencia es \citet{Gu2020}, que comparó muchos métodos ---de
+regresiones penalizadas a árboles y redes neuronales--- para predecir
+rentabilidades en un panel amplio de acciones. Sus conclusiones encajan con este
+trabajo: los métodos no lineales captan interacciones que los lineales ignoran,
+pero las mejoras son pequeñas ($R^2$ fuera de muestra muy bajos) y la
+regularización es clave para no sobreajustar con poca señal. De ese catálogo,
+este trabajo usa los \textit{Random Forests} de \citet{Breiman2001} y dos
+regresiones regularizadas, \textit{Ridge} y \textit{Lasso}; el Lasso, emparentado
+con la \textit{elastic net} de \citet{Zou2005}, además selecciona variables por
+sí solo. Esas predicciones alimentan el optimizador.
 
-Conviene subrayar que la incorporación de estas predicciones al modelo de
-Markowitz preserva su naturaleza de problema de optimización convexa, que puede
-resolverse de forma exacta con las técnicas descritas por
-\citet{Boyd2004}, sin recurrir a heurísticas. Esta combinación de predicción
-estadística y optimización exacta es el eje metodológico del presente trabajo.
+Meter estas predicciones en el modelo de Markowitz no le quita su carácter de
+problema de optimización convexa, que se resuelve de forma exacta con las
+técnicas de \citet{Boyd2004}, sin heurísticas. Esa combinación ---predicción
+estadística y optimización exacta--- es el enfoque central de este trabajo.
 
 %--------------------------------------------------------------------
 \section{Evaluación del rendimiento fuera de muestra}
 %--------------------------------------------------------------------
 
-La medida estándar para comparar estrategias de inversión es el ratio de
-\citet{Sharpe1966}, que cuantifica la rentabilidad obtenida por unidad de riesgo
-asumido. Sin embargo, comparar ratios de Sharpe a partir de una muestra finita
-exige cautela estadística: las diferencias observadas pueden deberse al azar.
-\citet{Memmel2003} corrigió el contraste de Jobson-Korkie para obtener un test
-válido de la igualdad de dos ratios de Sharpe, herramienta que este trabajo
-emplea para evaluar la significancia de sus resultados. La propia metodología de
-comparación fuera de muestra frente a baselines ingenuos, popularizada por
-\citet{DeMiguel2009}, constituye el estándar metodológico que aquí se adopta.
+La medida habitual para comparar estrategias es el ratio de \citet{Sharpe1966}
+(rentabilidad por unidad de riesgo). Pero compararlo con una muestra finita pide
+cautela: las diferencias pueden deberse al azar. \citet{Memmel2003} corrigió el
+contraste de Jobson-Korkie para obtener un test válido de igualdad entre dos
+ratios de Sharpe, que este trabajo usa para medir la significación de sus
+resultados. La forma de comparar fuera de muestra frente a baselines ingenuos,
+popularizada por \citet{DeMiguel2009}, es el estándar que se adopta aquí.
 
 %--------------------------------------------------------------------
 \section{Posicionamiento de este trabajo}
 %--------------------------------------------------------------------
 
-A la luz de la literatura revisada, este trabajo se sitúa en la intersección de
-tres líneas: la formulación matemática rigurosa del problema de Markowitz como
-programa cuadrático convexo resuelto de forma exacta \cite{Markowitz1952,
-Boyd2004}; la mitigación del error de estimación tanto en la covarianza
----mediante \textit{shrinkage} y un modelo de factores por componentes
-principales \cite{Ledoit2004, Ross1976}--- como en la rentabilidad esperada
----mediante aprendizaje automático \cite{Gu2020}---; y la evaluación honesta del rendimiento fuera de
-muestra con contraste de significancia estadística \cite{DeMiguel2009,
-Memmel2003}.
+Con todo lo anterior, este trabajo combina tres líneas: formular el problema de
+Markowitz con rigor, como un programa cuadrático convexo resuelto de forma exacta
+\cite{Markowitz1952, Boyd2004}; reducir el error de estimación en la covarianza
+---con \textit{shrinkage} y un modelo de factores por componentes principales
+\cite{Ledoit2004, Ross1976}--- y en la rentabilidad esperada ---con aprendizaje
+automático \cite{Gu2020}---; y evaluar el rendimiento fuera de muestra de forma
+honesta, con un contraste de significación \cite{DeMiguel2009, Memmel2003}.
 
-Frente a la abundante literatura de carácter aplicado, que con frecuencia
-recurre a métodos heurísticos de optimización y a un enfoque orientado al
-negocio, la aportación diferencial de este trabajo es doble. En primer lugar,
-el énfasis en el \textbf{rigor matemático}: la resolución exacta del problema
-convexo, el análisis de sus condiciones de optimalidad (KKT) y de su dualidad, y
-la conexión explícita entre la descomposición espectral de la covarianza y la
-teoría de factores. En segundo lugar, la \textbf{honestidad empírica}: lejos de
-presentar una estrategia ganadora, el trabajo somete sus resultados a un
-contraste de significancia estadística y discute con transparencia las
-condiciones bajo las cuales la optimización ayuda ---y aquellas, más frecuentes,
-en las que el error de estimación impide distinguirla de una diversificación
-ingenua.
+Frente a buena parte de la literatura aplicada, que suele tirar de métodos
+heurísticos y de un enfoque de negocio, este trabajo se distingue por dos cosas.
+La primera, el \textbf{rigor matemático}: resolver el problema convexo de forma
+exacta, analizar sus condiciones de optimalidad (KKT) y su dualidad, y conectar
+la descomposición espectral de la covarianza con la teoría de factores. La
+segunda, la \textbf{honestidad empírica}: en vez de vender una estrategia
+ganadora, el trabajo contrasta la significación de sus resultados y explica
+cuándo ayuda la optimización ---y cuándo, que es lo más habitual, el error de
+estimación impide distinguirla de una diversificación ingenua.

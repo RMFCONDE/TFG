@@ -250,28 +250,24 @@ independientes bajo \texttt{src/}:
 \begin{itemize}
     \item \texttt{data\_ingest/}: descarga y preprocesado de datos.
     \item \texttt{optimization/}: optimización QP (\texttt{cvxpy}),
-          estimación de covarianza (\texttt{scikit-learn}) y restricciones.
+          estimación de covarianza (\texttt{scikit-}\allowbreak\texttt{learn})
+          y restricciones.
     \item \texttt{ml/}: feature engineering, modelos (Ridge, Lasso, RF) y
           pipeline de predicción.
     \item \texttt{backtest/}: motor de backtesting walk-forward y métricas
           de evaluación.
 \end{itemize}
 
-La carpeta \texttt{tests/} contiene los tests que validan la implementación:
-la coincidencia de la solución numérica del QP con la solución analítica y el
-cumplimiento de las condiciones KKT (Capítulo~\ref{ch:formulacion}). Se incluye
-además, en \texttt{demo/}, una demostración web interactiva del optimizador,
-como material de apoyo a la presentación del trabajo.
+La carpeta \texttt{tests/} valida la implementación (coincidencia del QP con la
+solución analítica y condiciones KKT, Capítulo~\ref{ch:formulacion}), y
+\texttt{demo/} contiene una demostración web interactiva del optimizador, como
+apoyo a la presentación del trabajo.
 
-La reproducibilidad está garantizada mediante:
-\begin{itemize}
-    \item Semilla fija (\texttt{seed = 42}) para todos los componentes
-          aleatorios.
-    \item Versiones de dependencias congeladas en \texttt{requirements.txt}.
-    \item Datos descargables automáticamente desde Yahoo Finance.
-    \item Scripts de ejecución en \texttt{scripts/} que generan todas las
-          tablas y figuras de la memoria.
-\end{itemize}
+La reproducibilidad está garantizada mediante una semilla fija
+(\texttt{seed = 42}) para todos los componentes aleatorios, las versiones de las
+dependencias congeladas en \texttt{requirements.txt}, datos descargables
+automáticamente desde Yahoo Finance y scripts en \texttt{scripts/} que generan
+todas las tablas y figuras de la memoria.
 
 %--------------------------------------------------------------------
 \section{Síntesis}
