@@ -1,0 +1,96 @@
+\ifthenelse{\equal{\CoverOption}{classic}}{
+    \newcommand\BackgroundPicCover{%
+    \put(0,0){%
+    \parbox[b][\paperheight]{\paperwidth}{%
+    \vfill
+    \centering
+    \includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{Img/Theme/Portada-uspceu.pdf}%
+    \vfill
+    }}}
+}{
+    \newcommand\BackgroundPicCover{%
+    \put(0,0){%
+    \parbox[b][\paperheight]{\paperwidth}{%
+    \vfill
+    \centering
+    \includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{Img/Theme/Portada-uspceu-bn.pdf}%
+    \vfill
+    }}}
+}
+
+\AddToShipoutPictureBG*{\BackgroundPicCover}
+
+\newgeometry{margin=1.98cm, top=2.15cm, bottom=1.47cm}
+\begin{titlepage}
+    \latofont
+    \ifthenelse{\equal{\CoverOption}{classic}}{\color{white}}{\color{frontpagedark}}
+    \vspace*{\baselineskip}
+
+    \ifthenelse{\equal{\CoverOption}{classic}}{    
+        \begin{figure}
+            \includegraphics[width=0.485\linewidth]{Img/Theme/Logotypes/Logo-uspceu.pdf}
+        \end{figure}
+    } {
+        \begin{figure}
+            \includegraphics[width=0.485\linewidth]{Img/Theme/Logotypes/Logo-uspceu-gris.pdf}
+        \end{figure}
+    }
+
+    \vspace{5.5\baselineskip}
+
+    % Title.
+	\noindent
+    \makebox[\textwidth][l]{%
+        \parbox{\dimexpr\textwidth-3cm\relax}{
+            \setstretch{1.03}
+            \raggedright\bfseries\fontsize{26}{32}\selectfont\GetTitle
+        }
+    }
+
+    \vspace{0.8\baselineskip}
+
+    % Subtitle.
+    \noindent
+    \makebox[\textwidth][l]{%
+        \parbox{\dimexpr\textwidth-4cm\relax}{
+            \setstretch{1.03}
+            \raggedright\fontsize{18}{24}\selectfont\textsl{\GetSubtitle}
+        }
+    }
+
+    \vspace{35pt}  
+
+    % Author.
+    {\noindent\bfseries\fontsize{16}{20}\selectfont\GetFirstAuthor}
+ 
+	\vfill
+
+    % School.
+	{\noindent\fontsize{12}{14}\selectfont\GetSchool}
+	
+    % Department.
+	{\noindent\fontsize{12}{14}\selectfont\GetDepartment}
+
+    % Degree.
+	{\noindent\fontsize{12}{14}\selectfont\GetDegree}
+
+    % Course.
+    \ifdefined\GetCourse
+        {\noindent\fontsize{12}{14}\selectfont\GetCourse}
+	\fi
+
+    \ifthenelse{\equal{\DocStageOption}{working}}{
+        \vspace{62pt}
+        {\noindent\fontsize{10}{12}\selectfont\overwritecolor{yellow}{\GetDocumentVersion \\ \textit{\today}}} 
+        \vspace{62pt}
+    }{
+        \vspace{125pt}
+    }
+
+    % Local & Date.
+	{\noindent\fontsize{10}{12}\selectfont\GetDate}
+
+    \vspace{68pt}
+\end{titlepage}
+\restoregeometry
+\MediaOptionLogicBlank

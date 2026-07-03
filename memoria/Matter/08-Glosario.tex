@@ -1,0 +1,37 @@
+\chapter*{Glosario de términos y siglas}
+\addcontentsline{toc}{chapter}{Glosario de términos y siglas}
+
+\section*{Términos}
+
+\begin{description}
+    \item[Backtesting] Evaluación de una estrategia de inversión reproduciéndola sobre datos históricos.
+    \item[Walk-forward] Esquema de \textit{backtesting} con ventana móvil que, en cada instante, estima y decide usando únicamente información pasada.
+    \item[Look-ahead (sesgo de)] Uso indebido de información futura, no disponible en el momento de la decisión; error que debe evitarse en todo el \textit{backtesting}.
+    \item[Out-of-sample (fuera de muestra)] Datos que no se han empleado para estimar los parámetros ni para entrenar los modelos, y sobre los que se mide el rendimiento real.
+    \item[Baseline] Estrategia de referencia con la que se comparan las demás; aquí, la cartera equiponderada $1/N$ y el índice de mercado (SPY).
+    \item[Turnover] Rotación de la cartera de un rebalanceo al siguiente; se emplea como aproximación de los costes de transacción.
+    \item[Drawdown (máximo)] Mayor caída, de un máximo previo a un mínimo posterior, del valor acumulado de la cartera.
+    \item[Shrinkage] Técnica que contrae la matriz de covarianza muestral hacia una matriz estructurada y estable, reduciendo el error de estimación.
+    \item[Sparse (dispersa)] Solución con muchos coeficientes exactamente iguales a cero, característica de la regularización del Lasso.
+    \item[Ratio de Sharpe] Rentabilidad obtenida por unidad de riesgo (volatilidad).
+    \item[Pooled (agrupado)] Entrenamiento de un único modelo con las observaciones de todos los activos a la vez, en lugar de uno por activo.
+    \item[Feature] Característica o variable de entrada que utiliza el modelo de predicción.
+    \item[Precio sombra] Valor del multiplicador de una restricción; mide cuánto mejoraría el óptimo si esa restricción se relajara en una unidad.
+\end{description}
+
+\section*{Siglas}
+
+\begin{description}
+    \item[QP] Programa cuadrático (\textit{Quadratic Program}).
+    \item[KKT] Karush-Kuhn-Tucker (condiciones de optimalidad).
+    \item[ML] \textit{Machine Learning} (aprendizaje automático).
+    \item[PCA] Análisis de componentes principales.
+    \item[APT] \textit{Arbitrage Pricing Theory} (teoría de valoración por arbitraje).
+    \item[GMV] Cartera de mínima varianza global.
+    \item[CAPM] \textit{Capital Asset Pricing Model}.
+    \item[CML] \textit{Capital Market Line}.
+    \item[HHI] Índice de Herfindahl-Hirschman (concentración de la cartera).
+    \item[MDD] Máximo \textit{drawdown}.
+    \item[RMSE / MAE] Error cuadrático medio / error absoluto medio.
+    \item[SPY] ETF que replica el índice S\&P~500 (proxy de la cartera de mercado).
+\end{description}

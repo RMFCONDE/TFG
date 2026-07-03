@@ -1,0 +1,31 @@
+\ifthenelse{\equal{\AiAckOption}{true}}{%
+    \ifthenelse{\equal{\LanguageOption}{spanish}}{%
+        \chapter*{Declaración sobre el Uso de Inteligencia Artificial}
+
+        Declaro que durante la realización de este Trabajo Fin de Grado he empleado herramientas de inteligencia artificial (en concreto, Claude y ChatGPT) como apoyo en las siguientes tareas:
+
+        \begin{itemize}
+            \item \textbf{Programación.} Ayuda en la implementación y depuración del código en Python: la descarga y el preprocesado de los datos, los estimadores de la matriz de covarianza (muestral, \textit{shrinkage} de Ledoit-Wolf y PCA), la resolución del problema de optimización de Markowitz con \texttt{cvxpy}, los modelos de aprendizaje automático (Ridge, Lasso y Random Forest), el motor de \textit{backtesting} walk-forward y los contrastes de significancia estadística. También en la explicación de las operaciones no triviales del código.
+            \item \textbf{Búsqueda y gestión de fuentes.} Ayuda en la localización y verificación de referencias académicas y en la organización de la bibliografía.
+            \item \textbf{Desarrollo de ideas y metodología.} Apoyo en la discusión del enfoque matemático y de las decisiones metodológicas del trabajo.
+            \item \textbf{Revisión y corrección.} Ayuda en la detección de errores e incoherencias en el contenido y en la revisión lingüística del texto.
+        \end{itemize}
+
+        En todos los casos he empleado estas herramientas como una ayuda, y no como sustituto del criterio propio. He supervisado, revisado y validado la totalidad del contenido, y asumo la plena responsabilidad sobre las decisiones metodológicas, los resultados, las conclusiones y la redacción final del trabajo.
+    }{%
+        \chapter*{Declaration on the Use of Artificial Intelligence}
+
+        I declare that during this Bachelor's Thesis I have used artificial intelligence tools (specifically, Claude and ChatGPT) as support in the following tasks:
+
+        \begin{itemize}
+            \item \textbf{Programming.} Support in implementing and debugging the Python code: data download and preprocessing, the covariance estimators (sample, Ledoit-Wolf \textit{shrinkage} and PCA), the solution of the Markowitz optimization problem with \texttt{cvxpy}, the machine learning models (Ridge, Lasso and Random Forest), the walk-forward \textit{backtesting} engine and the statistical significance tests. Also in explaining the non-trivial operations of the code.
+            \item \textbf{Searching and managing sources.} Support in locating and verifying academic references and in organising the bibliography.
+            \item \textbf{Development of ideas and methodology.} Support in discussing the mathematical approach and the methodological decisions of the work.
+            \item \textbf{Review and correction.} Support in detecting errors and inconsistencies in the content and in the linguistic revision of the text.
+        \end{itemize}
+
+        In every case I have used these tools as an aid, not as a substitute for my own judgement. I have supervised, reviewed and validated the entire content, and I assume full responsibility for the methodological decisions, the results, the conclusions and the final wording of the work.
+    }
+
+    \MediaOptionLogicBlank
+}{}
