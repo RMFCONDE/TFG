@@ -1,0 +1,37 @@
+%%% Fonts %%%
+\usepackage[T1]{fontenc} % Font encoding for extended character sets.
+\usepackage{newpxmath} % Use PX fonts for math (alternative to standard fonts).
+\usepackage{fvextra} % Enhanced customisation of verbatim environments.
+\usepackage{csquotes} % Context-sensitive quotation marks.
+\usepackage{fontspec} % Required for custom fonts with XeLaTeX or LuaLaTeX.
+
+\linespread{1.08} % Slightly increase line spacing.
+\setmainfont{TeXGyrePagella}[
+    Path = /opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/opentype/public/tex-gyre/,
+    Extension = .otf,
+    UprightFont = *-regular,
+    BoldFont = *-bold,
+    ItalicFont = *-italic,
+    BoldItalicFont = *-bolditalic,
+    Ligatures=TeX,
+    LetterSpace=0.7
+] % Set TeX Gyre Pagella as the main font.
+
+\newcommand{\latofont}{\fontspec{Lato}[
+    Path = /Users/richardmfc/Library/Fonts/,
+    Extension = .ttf,
+    UprightFont = *-Regular,
+    BoldFont = *-Bold,
+    ItalicFont = *-Italic,
+    BoldItalicFont = *-BoldItalic
+]}
+\newcommand{\garamondfont}{\fontspec{EB Garamond}}
+\newcommand{\minionfont}{\fontspec[
+    Path = Configurations/Fonts/,
+    % UprightFont = Minion-Pro-Regular.ttf,
+    % UprightFont = Minion-Pro-Subhead.otf,
+    UprightFont = Minion-Pro-Display.otf,
+    BoldFont = Minion-Pro-Bold.ttf,
+    ItalicFont = Minion-Pro-Italic.ttf,
+    BoldItalicFont = Minion-Pro-Bold-Italic.ttf,
+]{Minion Pro}}
