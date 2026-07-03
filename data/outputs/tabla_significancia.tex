@@ -1,0 +1,14 @@
+\begin{tabular}{lrrrrr}
+\toprule
+Estrategia & Sharpe & IC 95\% inf. & IC 95\% sup. & $p$ vs SPY & $p$ vs 1/N \\
+\midrule
+Markowitz (muestral) & 0,685 & 0,205 & 1,245 & 0,207 & 0,554 \\
+Markowitz (Ledoit-Wolf) & 0,720 & 0,249 & 1,274 & 0,259 & 0,680 \\
+Markowitz (PCA) & 0,729 & 0,249 & 1,298 & 0,292 & 0,727 \\
+Markowitz + Ridge & 0,718 & 0,260 & 1,235 & 0,263 & 0,642 \\
+Markowitz + Lasso & 0,787 & 0,302 & 1,367 & 0,477 & 0,977 \\
+Markowitz + RF & 0,746 & 0,282 & 1,277 & 0,334 & 0,752 \\
+1/N (equiponderada) & 0,792 & 0,305 & 1,358 & 0,206 & --- \\
+SPY (mercado) & 0,921 & 0,399 & 1,559 & --- & 0,206 \\
+\bottomrule
+\end{tabular}
