@@ -1,0 +1,61 @@
+\chapter{Introducción}
+\label{ch:introduccion}
+
+\section{Motivación y contexto}
+
+La gestión cuantitativa de inversiones ha cambiado mucho en las últimas
+décadas. El modelo de selección de carteras de Harry Markowitz (1952) puso las
+bases matemáticas de la diversificación y del equilibrio entre rentabilidad y
+riesgo. En la práctica, sin embargo, choca con un problema: hay que estimar sus
+parámetros de entrada, y sobre todo las rentabilidades esperadas de los activos.
+
+\section{Planteamiento del problema}
+
+El modelo de Markowitz necesita como entradas el vector de rentabilidades
+esperadas $\boldsymbol{\mu}$ y la matriz de covarianza $\boldsymbol{\Sigma}$. La
+matriz $\boldsymbol{\Sigma}$ se estima con cierta estabilidad a partir de datos
+históricos, y todavía mejora con técnicas de shrinkage. Estimar
+$\boldsymbol{\mu}$, en cambio, es mucho más difícil: pequeños errores en la
+predicción de rentabilidades dan carteras muy distintas y, a menudo, peores que
+un simple reparto equiponderado \cite{DeMiguel2009}.
+
+Este trabajo estudia si el Machine Learning puede mejorar la predicción de
+$\boldsymbol{\mu}$ y, con ello, el rendimiento \emph{out-of-sample} (fuera de la
+muestra de estimación) de las carteras optimizadas.
+
+\section{Objetivos}
+
+\subsection{Objetivo general}
+
+Diseñar y evaluar un modelo de optimización de carteras que integre la
+teoría clásica de Markowitz con técnicas de Machine Learning para la
+predicción de rentabilidades esperadas.
+
+\subsection{Objetivos específicos}
+
+\begin{enumerate}
+    \item Formular el modelo media-varianza como un problema cuadrático
+          convexo (QP) y resolverlo de forma exacta mediante \texttt{cvxpy}.
+    \item Implementar y comparar tres estimadores de la matriz de covarianza:
+          muestral, shrinkage de Ledoit-Wolf y basado en PCA/factores.
+    \item Desarrollar modelos de Machine Learning (Ridge, Lasso, Random Forest)
+          para predecir las rentabilidades esperadas de cada activo.
+    \item Evaluar el rendimiento out-of-sample de las carteras mediante
+          backtesting walk-forward, comparándolas contra baselines relevantes.
+\end{enumerate}
+
+\section{Estructura del documento}
+
+El resto del documento se organiza como sigue. El Capítulo~\ref{ch:estado-arte}
+revisa el estado del arte en optimización de carteras, desde la teoría moderna
+hasta el aprendizaje automático. El Capítulo~\ref{ch:marco-teorico}
+presenta el marco teórico financiero. El Capítulo~\ref{ch:formulacion} desarrolla
+la formulación matemática del problema como QP convexo, incluyendo las
+condiciones KKT y la solución analítica de la frontera eficiente. El
+Capítulo~\ref{ch:limitaciones} aborda las limitaciones del modelo clásico
+y presenta los estimadores robustos de covarianza. El Capítulo~\ref{ch:ml}
+describe la aplicación de Machine Learning a la predicción de rentabilidades.
+El Capítulo~\ref{ch:metodologia} detalla la metodología experimental. El
+Capítulo~\ref{ch:resultados} presenta y discute los resultados. Finalmente,
+el Capítulo~\ref{ch:conclusiones} recoge las conclusiones y posibles líneas
+futuras de investigación.

@@ -1,0 +1,56 @@
+\thispagestyle{plain}
+\chapter*{Resumen}
+
+La selección óptima de carteras según el modelo media-varianza de Markowitz
+depende de la estimación de dos parámetros: el vector de rentabilidades
+esperadas $\boldsymbol{\mu}$ y la matriz de covarianza $\boldsymbol{\Sigma}$.
+Este trabajo formula el modelo como un problema cuadrático convexo (QP), lo
+resuelve de forma exacta a través de sus condiciones de Karush-Kuhn-Tucker (KKT)
+y evalúa hasta qué punto varias técnicas estadísticas y de \textit{Machine
+Learning} mejoran la estimación de esos parámetros. Sobre una muestra de 30
+acciones del S\&P~500 (2010--2024), se comparan tres estimadores de la covarianza
+(muestral, \textit{shrinkage} de Ledoit-Wolf y reconstrucción por componentes
+principales, PCA) y tres modelos de predicción de $\boldsymbol{\mu}$ (Ridge,
+Lasso y Random Forest), validados mediante \textit{backtesting} walk-forward sin
+\textit{look-ahead} frente a los \textit{baselines} $1/N$ (equiponderada) y el
+índice de mercado (SPY). El \textit{shrinkage} y el PCA mejoran de forma modesta
+la cartera muestral (Sharpe $0{,}68$ y $0{,}69$ frente a $0{,}64$). Entrenados de
+forma agrupada, los modelos de \textit{Machine Learning} resultan competitivos:
+Lasso (Sharpe $0{,}75$) llega a igualar a la estrategia $1/N$ ($0{,}76$). Aun
+así, ninguna cartera optimizada supera al mercado (Sharpe $0{,}90$) y, sobre
+todo, ninguna diferencia de Sharpe es estadísticamente significativa. La
+principal contribución no es un modelo que bata al mercado, sino una
+demostración rigurosa de por qué el error de estimación domina el problema,
+hasta hacer indistinguibles las estrategias, y de qué técnicas ayudan a
+mitigarlo.
+
+\keywordses{Optimización de carteras, Modelo de Markowitz, Programación cuadrática convexa, Shrinkage de Ledoit-Wolf, Machine Learning, Backtesting walk-forward.}
+
+\MediaOptionLogicBlank
+
+\pdfbookmark[1]{Abstract}{abstract}
+\chapter*{Abstract}
+Optimal portfolio selection under Markowitz's mean--variance model depends on
+estimating two parameters: the vector of expected returns $\boldsymbol{\mu}$ and
+the covariance matrix $\boldsymbol{\Sigma}$. This work formulates the model as a
+convex quadratic program (QP), solves it exactly through its Karush-Kuhn-Tucker
+(KKT) conditions, and empirically assesses how far statistical and
+\textit{Machine Learning} techniques improve the estimation of these parameters.
+Using a sample of 30 S\&P~500 stocks (2010--2024), three covariance estimators
+(sample, Ledoit-Wolf \textit{shrinkage} and principal-component (PCA)
+reconstruction) and three models for predicting $\boldsymbol{\mu}$ (Ridge, Lasso
+and Random Forest) are compared, all validated through walk-forward
+\textit{backtesting} without \textit{look-ahead} against the $1/N$ (equally
+weighted) and market-index (SPY) baselines. Shrinkage and PCA modestly improve
+the sample portfolio (Sharpe $0.68$ and $0.69$ vs.\ $0.64$). When trained in a
+pooled fashion, the \textit{Machine Learning} models are competitive: Lasso
+(Sharpe $0.75$) matches the $1/N$ strategy ($0.76$). Nevertheless, no optimized
+portfolio beats the market (Sharpe $0.90$) and, crucially, none of the Sharpe
+differences is statistically significant. The main contribution is not a model
+that beats the market, but a rigorous demonstration of why estimation error
+dominates the problem, to the point of making the strategies indistinguishable,
+and of which techniques help to mitigate it.
+
+\keywordsen{Portfolio optimization, Markowitz model, Convex quadratic programming, Ledoit-Wolf shrinkage, Machine Learning, Walk-forward backtesting.}
+
+\MediaOptionLogicBlank
