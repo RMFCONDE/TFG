@@ -1,0 +1,300 @@
+\chapter{Marco teórico financiero}
+\label{ch:marco-teorico}
+
+Este capítulo presenta los fundamentos teóricos sobre los que se construye
+este trabajo. Se comienza con los conceptos de rentabilidad y riesgo, se
+desarrolla el modelo de selección de carteras de Markowitz y se introducen
+el ratio de Sharpe y el modelo CAPM como extensiones naturales.
+La notación que se establece aquí se mantendrá consistente a lo largo de
+toda la memoria.
+
+%--------------------------------------------------------------------
+\section{Rentabilidad, riesgo y covarianza}
+%--------------------------------------------------------------------
+
+\subsection{Rentabilidad de un activo}
+
+Sea $P_t$ el precio ajustado de un activo financiero en el instante $t$.
+La \textbf{rentabilidad simple} entre $t-1$ y $t$ se define como:
+\begin{equation}
+    R_t = \frac{P_t - P_{t-1}}{P_{t-1}} = \frac{P_t}{P_{t-1}} - 1.
+    \label{eq:rentabilidad-simple}
+\end{equation}
+
+En este trabajo se emplea la \textbf{rentabilidad logarítmica} (o
+log-retorno), definida como:
+\begin{equation}
+    r_t = \ln \frac{P_t}{P_{t-1}} = \ln(P_t) - \ln(P_{t-1}).
+    \label{eq:rentabilidad-log}
+\end{equation}
+
+La rentabilidad logarítmica tiene dos ventajas para el análisis cuantitativo.
+Es \textbf{aditiva en el tiempo}: la rentabilidad acumulada en $k$ días es la
+suma de las diarias,
+\begin{equation}
+    r_{t \to t+k} = \ln \frac{P_{t+k}}{P_t} = \sum_{j=1}^{k} r_{t+j},
+    \label{eq:aditividad-log}
+\end{equation}
+lo que permite agregar a frecuencias mayores con una simple suma ---así se pasa
+de datos diarios a la frecuencia mensual del backtesting---. Y para variaciones
+pequeñas ($|R_t| \ll 1$) cumple $r_t \approx R_t$, con lo que hereda la
+interpretabilidad de la rentabilidad simple.
+
+\subsection{Riesgo: volatilidad}
+
+El \textbf{riesgo} de un activo se mide con la \textbf{volatilidad}
+$\sigma$, definida como la desviación típica de sus rentabilidades:
+\begin{equation}
+    \sigma = \sqrt{\Var[r]} = \sqrt{\frac{1}{T-1} \sum_{t=1}^{T}
+    \bigl(r_t - \bar{r}\bigr)^2},
+    \label{eq:volatilidad}
+\end{equation}
+donde $\bar{r} = \frac{1}{T}\sum_{t=1}^T r_t$ es la rentabilidad media
+muestral. La volatilidad se expresa típicamente en términos anualizados;
+si $r$ es una rentabilidad diaria, $\sigma_{\text{anual}} = \sigma \cdot
+\sqrt{252}$, y si $r$ es mensual, $\sigma_{\text{anual}} = \sigma \cdot
+\sqrt{12}$.
+
+\subsection{Covarianza y correlación}
+
+Dados dos activos $i$ y $j$, su \textbf{covarianza} mide la tendencia
+conjunta de sus rentabilidades:
+\begin{equation}
+    \sigma_{ij} = \Cov[r_i, r_j]
+    = \frac{1}{T-1} \sum_{t=1}^{T} (r_{it} - \bar{r}_i)(r_{jt} - \bar{r}_j).
+    \label{eq:covarianza}
+\end{equation}
+
+La \textbf{matriz de covarianza} $\boldsymbol{\Sigma} = [\sigma_{ij}] \in
+\mathbb{R}^{n \times n}$ recoge las covarianzas entre todos los pares de
+activos de un universo de $n$ títulos. Es simétrica ($\sigma_{ij} =
+\sigma_{ji}$) y semidefinida positiva ($\mathbf{x}^T \boldsymbol{\Sigma}
+\mathbf{x} \ge 0$ para todo $\mathbf{x} \in \mathbb{R}^n$).
+
+La \textbf{correlación} normaliza la covarianza al intervalo $[-1, 1]$:
+\begin{equation}
+    \rho_{ij} = \frac{\sigma_{ij}}{\sigma_i \, \sigma_j},
+    \label{eq:correlacion}
+\end{equation}
+donde $\sigma_i = \sqrt{\sigma_{ii}}$ es la volatilidad del activo $i$.
+
+\subsection{El principio de diversificación}
+
+La varianza de una cartera con pesos $\mathbf{w} = (w_1, \dots, w_n)^T$
+es:
+\begin{equation}
+    \sigma_p^2 = \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}
+    = \sum_{i=1}^{n} w_i^2 \sigma_i^2
+    + \sum_{i=1}^{n} \sum_{\substack{j=1 \\ j \neq i}}^{n} w_i w_j \sigma_{ij}.
+    \label{eq:varianza-cartera}
+\end{equation}
+
+El primer sumando recoge las \textbf{varianzas propias} de cada activo; el
+segundo, los \textbf{términos de covarianza} entre pares de activos. Es este
+segundo bloque el que hace que el riesgo de la cartera no sea, en general, la
+suma ponderada de los riesgos individuales.
+
+En efecto, cuando los activos no están perfectamente correlacionados, la
+desviación típica de la cartera satisface
+\begin{equation}
+    \sigma_p \le \sum_{i=1}^{n} w_i \sigma_i \qquad (w_i \ge 0),
+    \label{eq:subaditividad}
+\end{equation}
+con igualdad si y solo si todas las correlaciones valen $1$. Combinar activos
+imperfectamente correlacionados reduce, por tanto, el riesgo por debajo de la
+media ponderada de los individuales sin sacrificar rentabilidad esperada: esta
+es la esencia de la \textbf{diversificación} y el punto de partida de Markowitz.
+Su descomposición en riesgo \emph{diversificable} (idiosincrásico) y \emph{no
+diversificable} (sistemático) se formaliza con modelos de factores como el CAPM
+y el APT (Capítulo~\ref{ch:limitaciones}).
+
+%--------------------------------------------------------------------
+\section{Teoría Moderna de Carteras de Markowitz}
+%--------------------------------------------------------------------
+
+En su artículo seminal de 1952, Harry Markowitz propuso un marco
+matemático para construir carteras óptimas a partir de dos criterios
+contrapuestos: maximizar la rentabilidad esperada y minimizar el riesgo
+\cite{Markowitz1952}.
+
+\subsection{Rentabilidad y riesgo de una cartera}
+
+Sea $\mathbf{w} \in \mathbb{R}^n$ el vector de pesos de una cartera,
+donde $w_i$ representa la fracción de capital invertida en el activo $i$.
+Sea $\boldsymbol{\mu} = (\mu_1, \dots, \mu_n)^T$ el vector de
+rentabilidades esperadas de los activos, con $\mu_i = \E[r_i]$.
+
+La \textbf{rentabilidad esperada} de la cartera es la combinación lineal
+de las rentabilidades esperadas de sus componentes:
+\begin{equation}
+    \mu_p = \E[r_p] = \E\Bigl[\sum_{i=1}^{n} w_i r_i\Bigr]
+    = \sum_{i=1}^{n} w_i \,\E[r_i]
+    = \mathbf{w}^T \boldsymbol{\mu}.
+    \label{eq:rentabilidad-cartera}
+\end{equation}
+
+La \textbf{varianza} de la cartera viene dada por la forma cuadrática
+(\ref{eq:varianza-cartera}), que en notación matricial se escribe:
+\begin{equation}
+    \sigma_p^2 = \Var[r_p]
+    = \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}.
+    \label{eq:varianza-cartera-matricial}
+\end{equation}
+
+\subsection{El problema de optimización media-varianza}
+
+Markowitz formula la selección de carteras como un problema de
+optimización bicriterio: maximizar $\mu_p$ y minimizar $\sigma_p^2$.
+Esto da lugar a dos formulaciones equivalentes:
+
+\begin{enumerate}
+    \item \textbf{Minimizar el riesgo} dada una rentabilidad objetivo
+          $\mu^*$:
+          \begin{equation}
+              \begin{aligned}
+                  \min_{\mathbf{w}} \quad & \tfrac{1}{2} \mathbf{w}^T
+                      \boldsymbol{\Sigma} \mathbf{w} \\
+                  \text{s.a.} \quad & \mathbf{w}^T \boldsymbol{\mu}
+                      \ge \mu^*, \\
+                  & \sum_{i=1}^{n} w_i = 1.
+              \end{aligned}
+              \label{eq:qp-riesgo}
+          \end{equation}
+
+    \item \textbf{Maximizar la rentabilidad} dado un nivel de riesgo
+          $\sigma_*$:
+          \begin{equation}
+              \begin{aligned}
+                  \max_{\mathbf{w}} \quad & \mathbf{w}^T \boldsymbol{\mu} \\
+                  \text{s.a.} \quad & \mathbf{w}^T \boldsymbol{\Sigma}
+                      \mathbf{w} \le \sigma^2_*, \\
+                  & \sum_{i=1}^{n} w_i = 1.
+              \end{aligned}
+              \label{eq:qp-rentabilidad}
+          \end{equation}
+\end{enumerate}
+
+La primera es un \textbf{programa cuadrático convexo} (QP); la segunda, un
+problema con \emph{restricción} cuadrática (QCQP), igualmente convexo. Ambas
+producen la misma frontera eficiente (Capítulo~\ref{ch:formulacion}); se usa la
+primera, más conveniente. Además del presupuesto ($\sum_i w_i = 1$), se imponen
+dos restricciones por realismo: \textbf{long-only} ($w_i \ge 0$, sin ventas en
+corto) y un \textbf{tope por activo} ($w_i \le w_{\max}$, típicamente $0{,}20$,
+que limita la concentración).
+
+%--------------------------------------------------------------------
+\section{Frontera eficiente y cartera tangente}
+%--------------------------------------------------------------------
+
+\subsection{Definición de frontera eficiente}
+
+Al resolver el problema (\ref{eq:qp-riesgo}) para distintos valores
+del objetivo de rentabilidad $\mu^*$, se obtiene una familia de carteras
+óptimas. En el
+plano $(\sigma_p, \mu_p)$, estas carteras describen una curva denominada
+\textbf{frontera eficiente}: para cada nivel de riesgo, la cartera que
+maximiza la rentabilidad esperada; equivalentemente, para cada nivel de
+rentabilidad, la cartera que minimiza el riesgo.
+
+Las carteras por debajo de la frontera son \textbf{ineficientes} ---otra ofrece
+más rentabilidad al mismo riesgo, o menos riesgo a igual rentabilidad--- y las
+que quedan por encima son \textbf{inalcanzables} con el universo y las
+restricciones dadas.
+
+\subsection{Cartera de mínima varianza global (GMV)}
+
+El extremo izquierdo de la frontera es la \textbf{cartera de mínima
+varianza global} (GMV, por sus siglas en inglés). Se obtiene resolviendo
+el QP sin restricción de rentabilidad objetivo:
+\begin{equation}
+    \begin{aligned}
+        \min_{\mathbf{w}} \quad & \mathbf{w}^T \boldsymbol{\Sigma}
+            \mathbf{w} \\
+        \text{s.a.} \quad & \sum_{i=1}^{n} w_i = 1, \quad
+            \mathbf{w} \ge \mathbf{0}.
+    \end{aligned}
+    \label{eq:gmv}
+\end{equation}
+
+La GMV es la cartera de menor riesgo posible dentro del universo de
+activos y no depende de $\boldsymbol{\mu}$ (solo de $\boldsymbol{\Sigma}$).
+Esta propiedad la convierte en una referencia especialmente útil: su
+rendimiento depende exclusivamente de la calidad de la estimación de la
+matriz de covarianza.
+
+\subsection{Cartera tangente y máximo ratio de Sharpe}
+
+El \textbf{ratio de Sharpe} \cite{Sharpe1966} mide el exceso de
+rentabilidad por unidad de riesgo:
+\begin{equation}
+    S_p = \frac{\mu_p - r_f}{\sigma_p},
+    \label{eq:sharpe}
+\end{equation}
+donde $r_f$ es la tasa libre de riesgo (que en este trabajo se toma como
+$r_f = 0$ por simplicidad, dado que los tipos de interés de referencia se
+mantuvieron próximos a cero durante buena parte del período de estudio).
+
+La \textbf{cartera tangente} (o de máximo ratio de Sharpe) es el punto de la
+frontera cuya recta desde el activo libre de riesgo es tangente a ella; según el
+teorema de separación de Tobin \cite{Tobin1958}, es la combinación óptima de
+activos con riesgo para cualquier inversor que preste o tome prestado al tipo
+$r_f$. Con restricciones de desigualdad no admite forma cerrada y se obtiene
+numéricamente, barriendo la frontera y tomando el punto de mayor Sharpe ---el
+enfoque de nuestra implementación.
+
+%--------------------------------------------------------------------
+\section{Capital Market Line y CAPM}
+%--------------------------------------------------------------------
+
+\subsection{Capital Market Line (CML)}
+
+En el plano $(\sigma_p, \mu_p)$, la \textbf{línea del mercado de capitales}
+(CML) es la semirrecta que parte de $(0, r_f)$ y es tangente a la frontera
+eficiente en la cartera tangente $T = (\sigma_T, \mu_T)$. Su ecuación es:
+\begin{equation}
+    \mu_p = r_f + \frac{\mu_T - r_f}{\sigma_T} \, \sigma_p.
+    \label{eq:cml}
+\end{equation}
+
+Cualquier punto sobre la CML representa una combinación del activo libre
+de riesgo y la cartera tangente $T$, y domina a cualquier cartera sobre
+la frontera eficiente original (excepto en el punto de tangencia).
+
+\subsection{Capital Asset Pricing Model (CAPM)}
+
+El CAPM, desarrollado por Sharpe \cite{Sharpe1964} y Lintner
+\cite{Lintner1965}, extiende el modelo de Markowitz introduciendo el
+concepto de equilibrio de mercado. Su ecuación fundamental es:
+\begin{equation}
+    \E[r_i] - r_f = \beta_i \bigl(\E[r_m] - r_f\bigr),
+    \label{eq:capm}
+\end{equation}
+donde $\beta_i = \Cov[r_i, r_m] / \Var[r_m]$ mide la sensibilidad del
+activo $i$ a los movimientos del mercado, y $r_m$ es la rentabilidad
+de la cartera de mercado.
+
+El CAPM predice que, en equilibrio, toda la rentabilidad esperada de un
+activo se explica por su exposición al riesgo sistemático (no
+diversificable), medido por $\beta_i$. El riesgo idiosincrásico no se
+remunera porque puede eliminarse diversificando.
+
+Aunque el CAPM es un modelo de equilibrio y el de Markowitz uno normativo,
+comparten la estructura media-varianza. Su conexión es relevante aquí en dos
+sentidos: justifica usar el SPY (proxy de la cartera de mercado) como baseline,
+y la estimación de $\boldsymbol{\Sigma}$ mediante PCA y factores
+(Capítulo~\ref{ch:limitaciones}) responde a la misma idea de separar el riesgo
+sistemático del idiosincrásico.
+
+%--------------------------------------------------------------------
+\section{Síntesis y conexión con el resto del trabajo}
+%--------------------------------------------------------------------
+
+El modelo de Markowitz proporciona un marco riguroso para la selección de
+carteras, pero su implementación requiere estimar $\boldsymbol{\mu}$ y
+$\boldsymbol{\Sigma}$, y la calidad de esas estimaciones determina el
+rendimiento out-of-sample. De ello se ocupan los capítulos siguientes: el
+Capítulo~\ref{ch:formulacion} desarrolla la formulación del QP y sus
+condiciones de optimalidad; el Capítulo~\ref{ch:limitaciones}, el error de
+estimación y los estimadores robustos de $\boldsymbol{\Sigma}$ (shrinkage,
+PCA); y el Capítulo~\ref{ch:ml}, el uso de Machine Learning para estimar
+$\boldsymbol{\mu}$.

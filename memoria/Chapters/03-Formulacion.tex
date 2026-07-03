@@ -1,0 +1,311 @@
+\chapter{Formulación matemática del problema}
+\label{ch:formulacion}
+
+Este capítulo es el núcleo matemático del trabajo. Se formula
+el modelo de selección de carteras de Markowitz como un problema de
+optimización cuadrática convexa (QP), se analizan sus condiciones de
+optimalidad de Karush-Kuhn-Tucker (KKT), se estudia la dualidad y se
+presenta la solución analítica de la frontera eficiente para el caso sin
+restricciones de desigualdad (cuya derivación completa se recoge en el
+Apéndice~\ref{ap:frontera-analitica}). La notación y los resultados aquí
+desarrollados son la base sobre la que se construye la implementación
+computacional del Capítulo~\ref{ch:metodologia}.
+
+%--------------------------------------------------------------------
+\section{El modelo media-varianza como problema de optimización}
+%--------------------------------------------------------------------
+
+\subsection{Notación}
+
+Sea un universo de $n$ activos financieros. Se denota:
+
+\begin{itemize}
+    \item $\mathbf{w} = (w_1, \dots, w_n)^T \in \mathbb{R}^n$: vector
+          de pesos de la cartera.
+    \item $\boldsymbol{\mu} = (\mu_1, \dots, \mu_n)^T \in \mathbb{R}^n$:
+          vector de rentabilidades esperadas, donde $\mu_i = \E[r_i]$.
+    \item $\boldsymbol{\Sigma} = [\sigma_{ij}] \in \mathbb{R}^{n \times n}$:
+          matriz de covarianza, simétrica y semidefinida positiva:
+          $\boldsymbol{\Sigma} \succeq 0$.
+    \item $\mathbf{1} = (1, \dots, 1)^T \in \mathbb{R}^n$.
+\end{itemize}
+
+\subsection{Formulación primal}
+
+El problema de Markowitz en su forma estándar (minimizar riesgo sujeto a
+una rentabilidad objetivo) se escribe:
+
+\begin{equation}
+    \boxed{
+    \begin{aligned}
+        \min_{\mathbf{w} \in \mathbb{R}^n} \quad
+        & f(\mathbf{w}) = \frac{1}{2} \mathbf{w}^T \boldsymbol{\Sigma}
+          \mathbf{w} \\
+        \text{sujeto a} \quad
+        & \mathbf{w}^T \boldsymbol{\mu} \ge \mu^*, \\
+        & \mathbf{1}^T \mathbf{w} = 1, \\
+        & w_i \ge 0, \quad i = 1, \dots, n, \\
+        & w_i \le w_{\max}, \quad i = 1, \dots, n.
+    \end{aligned}}
+    \label{eq:qp-completo}
+\end{equation}
+
+El factor $\frac{1}{2}$ en la función objetivo es puramente algebraico:
+simplifica las expresiones de las derivadas sin alterar el óptimo.
+La primera restricción exige que la cartera alcance al menos una
+rentabilidad esperada $\mu^*$. La segunda es la restricción de
+presupuesto. Las dos últimas son restricciones de desigualdad que
+acotan inferior y superiormente cada peso.
+
+El caso particular en que se omite la restricción de rentabilidad objetivo
+($\mathbf{w}^T \boldsymbol{\mu} \ge \mu^*$) se conoce como \textbf{cartera
+de mínima varianza global} (GMV):
+\begin{equation}
+    \min_{\mathbf{w}} \;
+    \frac{1}{2} \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}
+    \quad \text{s.a.} \quad
+    \mathbf{1}^T \mathbf{w} = 1, \;
+    \mathbf{w} \ge \mathbf{0}, \;
+    \mathbf{w} \le w_{\max} \mathbf{1}.
+    \label{eq:gmv-formal}
+\end{equation}
+
+%--------------------------------------------------------------------
+\section{Convexidad del problema cuadrático}
+%--------------------------------------------------------------------
+
+Un problema de optimización es \textbf{convexo} si la función objetivo es
+convexa y la región factible es un conjunto convexo. Esta propiedad es crucial:
+garantiza que todo mínimo local es también global y que las condiciones KKT son
+necesarias y suficientes para la optimalidad (junto con la condición de Slater,
+Sección~\ref{sec:dualidad}) \cite{Boyd2004}. A continuación se
+comprueba que el problema de Markowitz cumple ambas condiciones.
+
+\subsection{Convexidad de la función objetivo}
+
+La función objetivo es la forma cuadrática:
+\begin{equation}
+    f(\mathbf{w}) = \frac{1}{2} \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}.
+    \label{eq:funcion-objetivo}
+\end{equation}
+
+Su matriz hessiana es $\nabla^2 f(\mathbf{w}) = \boldsymbol{\Sigma}$. Dado
+que $\boldsymbol{\Sigma}$ es una matriz de covarianza, es semidefinida
+positiva por construcción:
+\begin{equation}
+    \mathbf{x}^T \boldsymbol{\Sigma} \mathbf{x}
+    = \Var[\mathbf{x}^T \mathbf{r}] \ge 0,
+    \quad \forall \mathbf{x} \in \mathbb{R}^n.
+    \label{eq:psd}
+\end{equation}
+
+Por tanto, $f$ es una función convexa ($\boldsymbol{\Sigma} \succeq 0$
+implica convexidad; si $\boldsymbol{\Sigma} \succ 0$, la función es
+estrictamente convexa). En la práctica, con $T > n$ observaciones y
+activos no redundantes, $\boldsymbol{\Sigma}$ es definida positiva y la
+solución es única.
+
+\subsection{Convexidad de la región factible}
+
+La región factible $\mathcal{F}$ está definida por:
+\begin{equation}
+    \mathcal{F} = \left\{
+        \mathbf{w} \in \mathbb{R}^n \;\middle|\;
+        \begin{aligned}
+            &\mathbf{1}^T \mathbf{w} = 1, \\
+            &\mathbf{w}^T \boldsymbol{\mu} \ge \mu^*, \\
+            &0 \le w_i \le w_{\max}, \; i = 1, \dots, n
+        \end{aligned}
+    \right\}.
+    \label{eq:region-factible}
+\end{equation}
+
+$\mathcal{F}$ es intersección de conjuntos convexos ---el hiperplano
+$\mathbf{1}^T \mathbf{w} = 1$, el semiespacio $\mathbf{w}^T \boldsymbol{\mu} \ge
+\mu^*$ y el hiperrectángulo $0 \le w_i \le w_{\max}$---, luego es convexa; y es
+compacta (cerrada y acotada), de modo que el teorema de Weierstrass garantiza la
+existencia de un mínimo global. Al ser convexos tanto el objetivo como la
+región, el problema~(\ref{eq:qp-completo}) es un \textbf{programa cuadrático
+convexo} (QP), y el óptimo que halla un solver estándar (\texttt{cvxpy}) es el
+óptimo global.
+
+Geométricamente, $\mathcal{F}$ es un politopo convexo: la intersección del
+$(n-1)$-simplex $\{\mathbf{w} \ge \mathbf{0} \mid \mathbf{1}^T \mathbf{w} = 1\}$
+con el hipercubo $[0, w_{\max}]^n$ y el semiespacio $\mathbf{w}^T
+\boldsymbol{\mu} \ge \mu^*$. Los topes $w_i \le w_{\max}$ truncan los vértices
+del simplex ---las carteras concentradas en un solo activo---, lo que hace la
+región más realista pero impide una solución analítica cerrada; y si $\mu^*$ es
+demasiado grande, $\mathcal{F}$ puede quedar vacía y el problema resulta
+infactible.
+
+%--------------------------------------------------------------------
+\section{Condiciones de Karush-Kuhn-Tucker (KKT)}
+%--------------------------------------------------------------------
+
+Las condiciones KKT caracterizan el óptimo de un problema con restricciones de
+igualdad y desigualdad a través de su Lagrangiano; su forma general se recuerda
+en el Apéndice~\ref{ap:kkt-general}. A continuación se particularizan al QP de
+Markowitz.
+
+Escribiendo el QP~(\ref{eq:qp-completo}) en la forma estándar general ---con
+función objetivo $f(\mathbf{w}) = \frac{1}{2}\mathbf{w}^T \boldsymbol{\Sigma}
+\mathbf{w}$, las desigualdades $g_i \le 0$ (long-only, tope por activo y
+rentabilidad objetivo) y la igualdad $\mathbf{1}^T\mathbf{w} = 1$--- e
+introduciendo los multiplicadores $\alpha_i, \beta_i \ge 0$ (cotas por activo),
+$\gamma \ge 0$ (rentabilidad) y $\lambda \in \mathbb{R}$ (presupuesto), el
+Lagrangiano resultante (detallado en el Apéndice~\ref{ap:kkt-markowitz}) da lugar
+a las siguientes \textbf{condiciones KKT} para el óptimo $\mathbf{w}^*$:
+
+\subsubsection*{1. Estacionariedad}
+
+El gradiente del Lagrangiano respecto a $\mathbf{w}$ se anula en el óptimo:
+\begin{equation}
+    \nabla_{\mathbf{w}} \mathcal{L}
+    = \boldsymbol{\Sigma} \mathbf{w}^*
+    - \boldsymbol{\alpha} + \boldsymbol{\beta}
+    - \gamma \boldsymbol{\mu}
+    - \lambda \mathbf{1}
+    = \mathbf{0}.
+    \label{eq:kkt-estacionariedad}
+\end{equation}
+
+Esta ecuación tiene una lectura financiera directa: en el óptimo, el riesgo
+adicional que aporta cada activo ($[\boldsymbol{\Sigma} \mathbf{w}^*]_i$) se
+equilibra con su beneficio en rentabilidad ($\gamma \mu_i$), ajustado por los
+multiplicadores de las restricciones activas y el precio del presupuesto
+$\lambda$.
+
+\subsubsection*{2. Factibilidad primal y dual}
+
+El punto $\mathbf{w}^*$ satisface todas las restricciones y los multiplicadores
+de las desigualdades son no negativos:
+\begin{equation}
+    \mathbf{1}^T \mathbf{w}^* = 1, \;\;
+    0 \le w_i^* \le w_{\max}, \;\;
+    \mathbf{w}^{*T} \boldsymbol{\mu} \ge \mu^*;
+    \qquad
+    \alpha_i, \beta_i, \gamma \ge 0.
+    \label{eq:kkt-primal}
+\end{equation}
+
+\subsubsection*{3. Holgura complementaria}
+
+Para cada restricción de desigualdad, o bien la restricción está activa
+(se cumple con igualdad) o bien su multiplicador es cero:
+\begin{align}
+    \alpha_i \, w_i^* &= 0, \quad i = 1, \dots, n,
+        \label{eq:kkt-holgura1} \\
+    \beta_i \, (w_i^* - w_{\max}) &= 0, \quad i = 1, \dots, n,
+        \label{eq:kkt-holgura2} \\
+    \gamma \, (\mu^* - \mathbf{w}^{*T} \boldsymbol{\mu}) &= 0.
+        \label{eq:kkt-holgura3}
+\end{align}
+
+La holgura complementaria admite una interpretación económica clara según el
+peso del activo en el óptimo: si $0 < w_i^* < w_{\max}$, entonces
+$\alpha_i = \beta_i = 0$ y la estacionariedad se reduce a
+$[\boldsymbol{\Sigma}\mathbf{w}^*]_i = \gamma\mu_i + \lambda$ (el coste marginal
+de riesgo iguala al beneficio marginal de rentabilidad); si $w_i^* = 0$, el
+activo queda fuera porque su contribución al riesgo supera a la de rentabilidad;
+y si $w_i^* = w_{\max}$, está en su tope porque su rentabilidad justifica asumir
+más riesgo del que permiten las restricciones.
+
+La implementación verifica explícitamente que la solución de \texttt{cvxpy}
+satisface estas condiciones: el test \texttt{test\_condiciones\_kkt} recupera
+los multiplicadores a partir de la solución numérica y comprueba las cuatro
+condiciones con tolerancia $10^{-4}$, una validación independiente del solver.
+
+%--------------------------------------------------------------------
+\section{Dualidad e interpretación económica}
+\label{sec:dualidad}
+%--------------------------------------------------------------------
+
+\subsection{El problema dual}
+
+Asociado al problema primal (\ref{eq:qp-completo}) existe un
+\textbf{problema dual} que proporciona una cota inferior del valor
+óptimo primal. Si el problema convexo satisface la condición de Slater (existe un punto
+estrictamente factible), la \textbf{dualidad fuerte} garantiza que los valores
+óptimos primal y dual coinciden \cite{Boyd2004}.
+
+En nuestro QP, Slater se cumple si $n \cdot w_{\max} > 1$ (los topes son
+compatibles con el presupuesto) y $\mu^*$ es estrictamente menor que la máxima
+rentabilidad esperada alcanzable respetando los topes; bajo esas condiciones
+existe un punto estrictamente interior a la región factible.
+
+\subsection{Interpretación de los multiplicadores}
+
+Los multiplicadores de KKT se interpretan como \textbf{precios sombra}: el
+precio sombra de una restricción indica cuánto bajaría la varianza mínima de la
+cartera si esa restricción se relajara en una unidad. Dicho de otro modo, mide
+lo que ``cuesta'' esa restricción en el óptimo. En nuestro problema:
+\begin{itemize}
+    \item $\lambda$ (presupuesto): cuánto cambiaría el riesgo si el capital a
+          invertir fuera algo mayor o menor.
+    \item $\gamma$ (rentabilidad objetivo): cuánto bajaría el riesgo si se
+          exigiera un poco menos de rentabilidad.
+    \item $\alpha_i$ (cota $w_i \ge 0$): si es positivo, permitir una pequeña
+          posición corta en el activo $i$ reduciría el riesgo.
+    \item $\beta_i$ (tope $w_i \le w_{\max}$): si es positivo, dejar invertir
+          algo más del tope en el activo $i$ reduciría el riesgo.
+\end{itemize}
+
+%--------------------------------------------------------------------
+\section{Solución analítica de la frontera eficiente}
+%--------------------------------------------------------------------
+
+Cuando se eliminan las restricciones de desigualdad ($w_i \ge 0$ y
+$w_i \le w_{\max}$) y se supone $\boldsymbol{\Sigma} \succ 0$, el problema
+admite una solución analítica cerrada, uno de los resultados clásicos de la
+teoría de carteras \cite{Merton1972}. La frontera de mínima varianza es una
+hipérbola en el plano $(\sigma_p, \mu_p)$,
+\begin{equation*}
+    \sigma_p^2 = \frac{A \mu_p^2 - 2B \mu_p + C}{\Delta},
+    \qquad
+    A = \mathbf{1}^T \boldsymbol{\Sigma}^{-1} \mathbf{1}, \;
+    B = \mathbf{1}^T \boldsymbol{\Sigma}^{-1} \boldsymbol{\mu}, \;
+    C = \boldsymbol{\mu}^T \boldsymbol{\Sigma}^{-1} \boldsymbol{\mu},
+\end{equation*}
+con $\Delta = AC - B^2 > 0$ (positivo por Cauchy-Schwarz siempre que
+$\boldsymbol{\mu}$ y $\mathbf{1}$ sean linealmente independientes). Su vértice
+es la cartera de mínima varianza global (GMV), con $\mu_{\text{GMV}} = B/A$, y
+el punto de tangencia con una recta por el origen da la cartera de máximo ratio
+de Sharpe:
+\begin{equation*}
+    \mathbf{w}_{\text{GMV}}
+    = \frac{\boldsymbol{\Sigma}^{-1} \mathbf{1}}
+           {\mathbf{1}^T \boldsymbol{\Sigma}^{-1} \mathbf{1}},
+    \qquad
+    \mathbf{w}_{T}
+    = \frac{\boldsymbol{\Sigma}^{-1} \boldsymbol{\mu}}
+           {\mathbf{1}^T \boldsymbol{\Sigma}^{-1} \boldsymbol{\mu}}.
+\end{equation*}
+La derivación completa por multiplicadores de Lagrange ---con la ecuación de la
+frontera, las expresiones de la GMV y de la cartera tangente, y su validación
+numérica frente a \texttt{cvxpy}--- se recoge en el
+Apéndice~\ref{ap:frontera-analitica}.
+
+%--------------------------------------------------------------------
+\section{Del caso analítico al caso con restricciones}
+%--------------------------------------------------------------------
+
+Cuando se añaden las restricciones $w_i \ge 0$ y $w_i \le w_{\max}$,
+la solución deja de admitir una expresión cerrada. La frontera eficiente
+ya no es una hipérbola perfecta, sino una curva suave definida a trozos
+por los puntos donde las restricciones se activan o desactivan, y la
+resolución pasa a ser numérica.
+
+Sin embargo, las propiedades cualitativas se conservan:
+\begin{itemize}
+    \item El problema sigue siendo convexo (la región factible es un
+          subconjunto convexo del simplex).
+    \item La solución es única si $\boldsymbol{\Sigma} \succ 0$.
+    \item Las condiciones KKT siguen caracterizando completamente el
+          óptimo.
+    \item La frontera eficiente es creciente y cóncava en el espacio
+          $(\sigma_p, \mu_p)$.
+\end{itemize}
+
+Esto justifica el uso de \texttt{cvxpy} como solver exacto: la convexidad
+garantiza optimalidad global, y las condiciones KKT proporcionan una
+herramienta de verificación independiente del solver.
