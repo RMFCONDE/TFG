@@ -1,0 +1,124 @@
+\chapter{Desarrollos matemáticos complementarios}
+\label{ap:desarrollos}
+
+Este apéndice recoge dos derivaciones autocontenidas a las que se remite desde
+el cuerpo del trabajo: la forma general de las condiciones de Karush-Kuhn-Tucker
+(Capítulo~\ref{ch:formulacion}) y la construcción del estimador de covarianza
+por componentes principales junto con su equivalencia con el modelo APT
+(Capítulo~\ref{ch:limitaciones}).
+
+\section{Condiciones de Karush-Kuhn-Tucker: planteamiento general}
+\label{ap:kkt-general}
+
+Consideremos el problema de optimización con restricciones de igualdad
+y desigualdad:
+\begin{equation}
+    \begin{aligned}
+        \min_{\mathbf{x}} \quad & f(\mathbf{x}) \\
+        \text{s.a.} \quad & g_i(\mathbf{x}) \le 0, \quad i = 1, \dots, m, \\
+        & h_j(\mathbf{x}) = 0, \quad j = 1, \dots, p.
+    \end{aligned}
+    \label{eq:problema-general}
+\end{equation}
+El \textbf{Lagrangiano} asociado es:
+\begin{equation}
+    \mathcal{L}(\mathbf{x}, \boldsymbol{\lambda}, \boldsymbol{\nu})
+    = f(\mathbf{x})
+    + \sum_{i=1}^{m} \lambda_i g_i(\mathbf{x})
+    + \sum_{j=1}^{p} \nu_j h_j(\mathbf{x}),
+    \label{eq:lagrangiano-general}
+\end{equation}
+donde $\lambda_i \ge 0$ son los multiplicadores de las restricciones de
+desigualdad y $\nu_j \in \mathbb{R}$ los de las igualdades. En el
+Capítulo~\ref{ch:formulacion} este planteamiento se particulariza al programa
+cuadrático de Markowitz.
+
+\section{Lagrangiano del QP de Markowitz}
+\label{ap:kkt-markowitz}
+
+Escribiendo el QP~(\ref{eq:qp-completo}) en la forma estándar anterior, la
+función objetivo es $f(\mathbf{w}) = \frac{1}{2}\mathbf{w}^T \boldsymbol{\Sigma}
+\mathbf{w}$ y las restricciones de desigualdad $g_i(\mathbf{w}) \le 0$ son:
+\begin{align}
+    g_i^{(1)}(\mathbf{w}) &= -w_i \le 0, \quad i = 1, \dots, n,
+        &&\text{(long-only)}, \label{eq:g1} \\
+    g_i^{(2)}(\mathbf{w}) &= w_i - w_{\max} \le 0, \quad i = 1, \dots, n,
+        &&\text{(tope por activo)}, \label{eq:g2} \\
+    g^{(3)}(\mathbf{w}) &= \mu^* - \mathbf{w}^T \boldsymbol{\mu} \le 0,
+        &&\text{(rentabilidad objetivo)}, \label{eq:g3}
+\end{align}
+junto con la restricción de igualdad
+\begin{equation}
+    h(\mathbf{w}) = \mathbf{1}^T \mathbf{w} - 1 = 0. \label{eq:h}
+\end{equation}
+Introduciendo los multiplicadores $\alpha_i \ge 0$ (cota inferior),
+$\beta_i \ge 0$ (cota superior), $\gamma \ge 0$ (rentabilidad objetivo) y
+$\lambda \in \mathbb{R}$ (presupuesto), el Lagrangiano es:
+\begin{equation}
+    \begin{aligned}
+        \mathcal{L}(\mathbf{w}, \boldsymbol{\alpha}, \boldsymbol{\beta},
+        \gamma, \lambda)
+        =& \; \frac{1}{2} \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}
+           - \sum_{i=1}^{n} \alpha_i w_i
+           + \sum_{i=1}^{n} \beta_i (w_i - w_{\max}) \\
+        & + \gamma (\mu^* - \mathbf{w}^T \boldsymbol{\mu})
+           + \lambda (1 - \mathbf{1}^T \mathbf{w}).
+    \end{aligned}
+    \label{eq:lagrangiano-qp}
+\end{equation}
+Las condiciones KKT que de aquí se derivan se enuncian e interpretan en el
+Capítulo~\ref{ch:formulacion}.
+
+\section{Estimador de covarianza por PCA y equivalencia con la APT}
+\label{ap:pca-apt}
+
+La matriz de covarianza muestral admite una descomposición espectral:
+\begin{equation}
+    \boldsymbol{\Sigma} = \mathbf{V} \boldsymbol{\Lambda} \mathbf{V}^T
+    = \sum_{i=1}^{n} \lambda_i \mathbf{v}_i \mathbf{v}_i^T,
+    \label{eq:descomposicion-espectral}
+\end{equation}
+donde $\lambda_1 \ge \lambda_2 \ge \dots \ge \lambda_n \ge 0$ son los
+autovalores (ordenados de mayor a menor) y $\mathbf{v}_1, \dots, \mathbf{v}_n$
+los autovectores. Cada autovalor $\lambda_i$ representa la varianza explicada
+por el $i$-ésimo componente principal. El estimador PCA retiene únicamente los
+$k$ primeros componentes (los factores principales) y descarta los $n-k$
+restantes, que se atribuyen a ruido:
+\begin{equation}
+    \boldsymbol{\Sigma}_k = \sum_{i=1}^{k} \lambda_i \mathbf{v}_i
+    \mathbf{v}_i^T,
+    \label{eq:sigma-k}
+\end{equation}
+y conserva la varianza específica de cada activo no explicada por los factores
+comunes (la diagonal del residuo):
+\begin{equation}
+    \boldsymbol{\Sigma}_{\text{PCA}} = \boldsymbol{\Sigma}_k
+    + \mathop{\textnormal{diag}}\nolimits\bigl(\boldsymbol{\Sigma}
+    - \boldsymbol{\Sigma}_k\bigr).
+    \label{eq:sigma-pca-final}
+\end{equation}
+
+La Arbitrage Pricing Theory de Ross \cite{Ross1976} postula que las
+rentabilidades se generan por un modelo factorial:
+\begin{equation}
+    r_i = \alpha_i + \sum_{j=1}^{k} \beta_{ij} f_j + \varepsilon_i,
+    \label{eq:apt}
+\end{equation}
+donde $f_1, \dots, f_k$ son factores de riesgo sistemático y $\varepsilon_i$ es
+el riesgo idiosincrásico del activo $i$, no correlacionado con los factores ni
+con los $\varepsilon$ de otros activos. Bajo este modelo, la covarianza se
+descompone como
+\begin{equation}
+    \boldsymbol{\Sigma} = \mathbf{B} \boldsymbol{\Sigma}_f
+    \mathbf{B}^T + \boldsymbol{\Psi},
+    \label{eq:cov-apt}
+\end{equation}
+con $\mathbf{B}$ la matriz de cargas factoriales ($\beta_{ij}$),
+$\boldsymbol{\Sigma}_f$ la covarianza de los factores y $\boldsymbol{\Psi}$ una
+matriz diagonal con las varianzas idiosincrásicas. Si se toman como factores los
+$k$ primeros componentes principales de las rentabilidades, el
+estimador~(\ref{eq:sigma-pca-final}) es exactamente el estimador APT: las cargas
+vienen dadas por $\mathbf{B} = \mathbf{V}_k \boldsymbol{\Lambda}_k^{1/2}$ y la
+covarianza de los factores es $\boldsymbol{\Sigma}_f = \mathbf{I}_k$ (por
+ortogonalidad de los componentes principales). Esta equivalencia conecta el
+enfoque puramente estadístico (PCA) con la teoría financiera (APT).

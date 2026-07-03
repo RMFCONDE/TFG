@@ -1,0 +1,184 @@
+\chapter{Solución analítica de la frontera eficiente}
+\label{ap:frontera-analitica}
+
+Cuando se eliminan las restricciones de desigualdad ($w_i \ge 0$ y
+$w_i \le w_{\max}$), el problema de Markowitz admite una solución analítica
+cerrada que constituye uno de los resultados clásicos de la teoría de
+carteras \cite{Merton1972}. Este apéndice recoge su derivación completa, a
+la que se remite desde el Capítulo~\ref{ch:formulacion}. En todo el desarrollo
+se supone que $\boldsymbol{\Sigma}$ es \textbf{definida positiva}
+($\boldsymbol{\Sigma} \succ 0$), hipótesis bajo la cual $\boldsymbol{\Sigma}^{-1}$
+existe; en la práctica se cumple cuando el número de observaciones supera al de
+activos y ninguna combinación de activos es redundante (cuestión que se discute
+en el Capítulo~\ref{ch:limitaciones}).
+
+\section{Caso sin restricciones de desigualdad}
+
+El problema se reduce a:
+\begin{equation}
+    \begin{aligned}
+        \min_{\mathbf{w}} \quad & \frac{1}{2} \mathbf{w}^T
+            \boldsymbol{\Sigma} \mathbf{w} \\
+        \text{s.a.} \quad & \mathbf{1}^T \mathbf{w} = 1, \\
+        & \mathbf{w}^T \boldsymbol{\mu} = \mu_p.
+    \end{aligned}
+    \label{eq:qp-sin-desigualdad}
+\end{equation}
+
+Nótese que la restricción de rentabilidad se ha escrito como igualdad
+($=$) en lugar de desigualdad ($\ge$): en el óptimo, cualquier objetivo
+$\mu_p$ alcanzable se saturará porque añadir rentabilidad sin aumentar
+riesgo es siempre beneficioso.
+
+\section{Derivación mediante multiplicadores de Lagrange}
+
+El Lagrangiano del problema (\ref{eq:qp-sin-desigualdad}) es:
+\begin{equation}
+    \mathcal{L}(\mathbf{w}, \lambda, \gamma)
+    = \frac{1}{2} \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}
+    + \lambda (1 - \mathbf{1}^T \mathbf{w})
+    + \gamma (\mu_p - \mathbf{w}^T \boldsymbol{\mu}).
+    \label{eq:lagrangiano-sin-desigualdad}
+\end{equation}
+
+La condición de estacionariedad $\nabla_{\mathbf{w}} \mathcal{L} =
+\mathbf{0}$ proporciona:
+\begin{equation}
+    \boldsymbol{\Sigma} \mathbf{w} - \lambda \mathbf{1}
+    - \gamma \boldsymbol{\mu} = \mathbf{0}
+    \quad \Longrightarrow \quad
+    \mathbf{w} = \boldsymbol{\Sigma}^{-1}
+    (\lambda \mathbf{1} + \gamma \boldsymbol{\mu}).
+    \label{eq:estacionariedad-analitica}
+\end{equation}
+
+Sustituyendo en las restricciones $\mathbf{1}^T \mathbf{w} = 1$ y
+$\boldsymbol{\mu}^T \mathbf{w} = \mu_p$, se obtiene un sistema lineal
+$2 \times 2$ para $(\lambda, \gamma)$:
+\begin{equation}
+    \begin{pmatrix}
+        A & B \\
+        B & C
+    \end{pmatrix}
+    \begin{pmatrix}
+        \lambda \\
+        \gamma
+    \end{pmatrix}
+    = \begin{pmatrix}
+        1 \\
+        \mu_p
+    \end{pmatrix},
+    \label{eq:sistema-lambda-gamma}
+\end{equation}
+donde se han definido las constantes escalares:
+\begin{equation}
+    A = \mathbf{1}^T \boldsymbol{\Sigma}^{-1} \mathbf{1}, \qquad
+    B = \mathbf{1}^T \boldsymbol{\Sigma}^{-1} \boldsymbol{\mu}, \qquad
+    C = \boldsymbol{\mu}^T \boldsymbol{\Sigma}^{-1} \boldsymbol{\mu}.
+    \label{eq:constantes-abc}
+\end{equation}
+
+Estas tres constantes dependen exclusivamente de $\boldsymbol{\Sigma}$
+y $\boldsymbol{\mu}$; no dependen del objetivo $\mu_p$. Como
+$\boldsymbol{\Sigma} \succ 0$, también $\boldsymbol{\Sigma}^{-1} \succ 0$,
+de modo que $\langle \mathbf{x}, \mathbf{y} \rangle :=
+\mathbf{x}^T \boldsymbol{\Sigma}^{-1} \mathbf{y}$ define un producto interior.
+En esta métrica $A = \langle \mathbf{1}, \mathbf{1} \rangle$,
+$C = \langle \boldsymbol{\mu}, \boldsymbol{\mu} \rangle$ y
+$B = \langle \mathbf{1}, \boldsymbol{\mu} \rangle$, por lo que la desigualdad
+de Cauchy-Schwarz da $B^2 \le AC$, con igualdad si y solo si $\boldsymbol{\mu}$
+y $\mathbf{1}$ son linealmente dependientes (es decir, todos los activos tienen
+la misma rentabilidad esperada). Bajo la hipótesis de que $\boldsymbol{\mu}$ y
+$\mathbf{1}$ son linealmente independientes, se tiene $\Delta = AC - B^2 > 0$,
+lo que garantiza que la matriz del sistema~(\ref{eq:sistema-lambda-gamma}) es
+invertible.
+
+Resolviendo el sistema:
+\begin{equation}
+    \lambda = \frac{C - B\mu_p}{\Delta}, \qquad
+    \gamma = \frac{A\mu_p - B}{\Delta}.
+    \label{eq:lambda-gamma-solucion}
+\end{equation}
+
+\section{Ecuación de la frontera eficiente}
+
+Sustituyendo $\lambda$ y $\gamma$ en la expresión de la varianza
+$\sigma_p^2 = \mathbf{w}^T \boldsymbol{\Sigma} \mathbf{w}$, se obtiene
+la ecuación de la frontera eficiente en el espacio $(\sigma_p, \mu_p)$:
+\begin{equation}
+    \boxed{
+    \sigma_p^2 = \frac{A \mu_p^2 - 2B \mu_p + C}{\Delta}.
+    }
+    \label{eq:hiperbola}
+\end{equation}
+
+Esta ecuación describe una \textbf{hipérbola} en el plano
+$(\sigma_p, \mu_p)$ ---o una parábola en el plano $(\sigma_p^2, \mu_p)$---,
+cuya rama derecha ($\sigma_p \ge 0$) es la \textbf{frontera de mínima
+varianza}: el lugar geométrico de las carteras de menor riesgo para cada
+nivel de rentabilidad. Su asíntota superior tiene pendiente
+$\sqrt{\Delta / A}$. La \textbf{frontera eficiente} propiamente dicha es solo
+la mitad superior de esa rama, $\mu_p \ge \mu_{\text{GMV}} = B/A$ (el vértice
+que se deduce en la ecuación~\ref{eq:mu-gmv}): por debajo del vértice, toda
+cartera está dominada por otra de igual riesgo y mayor rentabilidad, y por
+tanto no es eficiente.
+
+\section{Cartera de mínima varianza global (GMV)}
+
+El vértice de la hipérbola corresponde a la cartera de mínima varianza
+global. Derivando (\ref{eq:hiperbola}) respecto a $\mu_p$ e igualando a
+cero:
+\begin{equation}
+    \frac{d\sigma_p^2}{d\mu_p}
+    = \frac{2A\mu_p - 2B}{\Delta} = 0
+    \quad \Longrightarrow \quad
+    \boxed{\mu_{\text{GMV}} = \frac{B}{A}}.
+    \label{eq:mu-gmv}
+\end{equation}
+
+Sustituyendo en (\ref{eq:lambda-gamma-solucion}) se obtiene $\lambda =
+1/A$, $\gamma = 0$, y el vector de pesos de la GMV es:
+\begin{equation}
+    \boxed{\mathbf{w}_{\text{GMV}}
+    = \frac{\boldsymbol{\Sigma}^{-1} \mathbf{1}}
+           {\mathbf{1}^T \boldsymbol{\Sigma}^{-1} \mathbf{1}}.
+    }
+    \label{eq:w-gmv-analitica}
+\end{equation}
+
+La varianza de la GMV es $\sigma^2_{\text{GMV}} = 1/A$.
+
+\section{Cartera de máximo ratio de Sharpe}
+
+La cartera tangente (máximo ratio de Sharpe) se obtiene maximizando
+$S_p = (\mu_p - r_f) / \sigma_p$ sobre la frontera. Con $r_f = 0$, la
+condición de optimalidad es:
+\begin{equation}
+    \frac{\mu_p}{\sigma_p} = \frac{d\mu_p}{d\sigma_p}
+    \quad \Longrightarrow \quad
+    \boxed{\mu_T = \frac{C}{B}, \quad
+           \sigma_T^2 = \frac{C}{B^2}}.
+    \label{eq:max-sharpe-analitica}
+\end{equation}
+
+Y los pesos correspondientes:
+\begin{equation}
+    \boxed{\mathbf{w}_{T}
+    = \frac{\boldsymbol{\Sigma}^{-1} \boldsymbol{\mu}}
+           {\mathbf{1}^T \boldsymbol{\Sigma}^{-1} \boldsymbol{\mu}}.
+    }
+    \label{eq:w-tangente-analitica}
+\end{equation}
+
+\section{Validación con la implementación numérica}
+
+La solución analítica (\ref{eq:w-gmv-analitica}) proporciona una
+referencia exacta contra la que verificar la implementación numérica
+con \texttt{cvxpy}. En el test
+\texttt{test\_gmv\_coincide\_\allowbreak con\_\allowbreak analitica\_\allowbreak sin\_\allowbreak restricciones}
+del código, se genera una matriz $\boldsymbol{\Sigma}$ sintética
+(de $3 \times 3$), se resuelve el QP sin restricciones de desigualdad
+y se comprueba que la solución numérica coincide con la expresión
+(\ref{eq:w-gmv-analitica}) con un error relativo inferior a $10^{-5}$.
+Este acuerdo valida tanto la formulación del QP como su resolución
+numérica.
